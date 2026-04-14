@@ -1,0 +1,191 @@
+/* ================= DASHBOARD FULL ISOLATION ================= */
+/* INI ADALAH CSS KHUSUS DASHBOARD SAJA */
+/* Tidak akan mempengaruhi halaman master/table */
+
+/* HANYA aktif jika body punya class dashboard-page */
+body.dashboard-page {
+  background: #f5f7fa !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Container utama dashboard */
+body.dashboard-page .dashboard-container {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+  background-color: #f5f7fa !important;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  gap: 20px !important;
+  margin: 0 !important;
+}
+
+/* Header Dashboard */
+body.dashboard-page .dashboard-header {
+  color: white !important;
+  margin-bottom: 20px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+body.dashboard-page .dashboard-header h1 {
+  margin: 0 !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+}
+
+/* Grid untuk Card Dashboard */
+body.dashboard-page .dashboard-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+  gap: 20px !important;
+  margin-bottom: 20px !important;
+}
+
+/* Stat Card */
+body.dashboard-page .stat-card {
+  background: white !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  border: 1px solid #e2e8f0 !important;
+  height: 100% !important;
+}
+
+body.dashboard-page .stat-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+body.dashboard-page .stat-card-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 15px !important;
+  font-size: 1rem !important;
+  color: #4b5563 !important;
+  font-weight: 600 !important;
+}
+
+body.dashboard-page .stat-card-value {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: #1f2937 !important;
+  margin-bottom: 5px !important;
+}
+
+/* Panel Card */
+body.dashboard-page .panel-card {
+  background: white !important;
+  border-radius: 12px !important;
+  padding: 25px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  margin-bottom: 20px !important;
+}
+
+body.dashboard-page .panel-card-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 20px !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+}
+
+/* Chart containers */
+body.dashboard-page .pie-chart-container,
+body.dashboard-page .bar-chart-container {
+  width: 100% !important;
+  height: 300px !important;
+}
+
+/* Footer */
+body.dashboard-page .dashboard-footer {
+  text-align: center !important;
+  padding: 20px !important;
+  color: #6b7280 !important;
+  font-size: 0.9rem !important;
+  border-top: 1px solid #e5e7eb !important;
+  margin-top: auto !important;
+}
+
+/* ================= IMPORTANT: ISOLATE FROM MASTER TABLES ================= */
+/* Pastikan style master table TIDAK mempengaruhi dashboard */
+body.dashboard-page .master-main-content,
+body.dashboard-page .master-table-container,
+body.dashboard-page .master-table-section,
+body.dashboard-page .table-wrapper-fixed,
+body.dashboard-page .table-fixed,
+body.dashboard-page .table-header-actions,
+body.dashboard-page .table-pagination-container {
+  all: revert !important;
+}
+
+/* Pastikan selector umum di fix-master-tables.css tidak mempengaruhi dashboard */
+body.dashboard-page .dashboard-container {
+  all: revert !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+  background-color: #f5f7fa !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  gap: 20px !important;
+}
+
+/* Override untuk selector di fix-master-tables.css yang masih mempengaruhi */
+body.dashboard-page,
+body.dashboard-page * {
+  box-sizing: border-box !important;
+}
+
+/* Override khusus untuk selector yang masih konflik */
+body.master-page .dashboard-container,
+body:not(.dashboard-page) .dashboard-container,
+.master-page .dashboard-container,
+.table-page .dashboard-container {
+  all: unset !important;
+}
+
+/* Force dashboard styling */
+body.dashboard-page .dashboard-container {
+  padding: 20px !important;
+  margin: 0 !important;
+  gap: 20px !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #f5f7fa !important;
+}
+
+/* Responsive untuk Dashboard */
+@media (max-width: 768px) {
+  body.dashboard-page .dashboard-container {
+    padding: 15px !important;
+    gap: 15px !important;
+  }
+
+  body.dashboard-page .dashboard-header {
+    padding: 20px !important;
+  }
+
+  body.dashboard-page .dashboard-header h1 {
+    font-size: 1.5rem !important;
+  }
+
+  body.dashboard-page .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.dashboard-page .stat-card,
+  body.dashboard-page .panel-card {
+    padding: 20px !important;
+  }
+
+  body.dashboard-page .stat-card-value {
+    font-size: 1.5rem !important;
+  }
+}

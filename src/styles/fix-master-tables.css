@@ -1,0 +1,492 @@
+body.master-page,
+body.master-page *,
+body[class*="master-"],
+body[class*="page-"] {
+  box-sizing: border-box !important;
+}
+
+body.master-page .dashboard-container,
+body:not(.dashboard-page) .dashboard-container,
+.master-page .dashboard-container,
+.table-page .dashboard-container {
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+  min-height: 100vh !important;
+  display: block !important;
+  background: transparent !important;
+}
+
+body.master-aset-page .dashboard-container,
+body.karyawan-page .dashboard-container,
+body.peminjaman-page .dashboard-container,
+body.penjualan-page .dashboard-container,
+body.stok-page .dashboard-container,
+body.kendala-page .dashboard-container {
+  all: unset !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+  background: #f8fafc !important;
+}
+
+/* ================= LAYOUT FIX - SIDEBAR & TOPBAR ================= */
+/* Gunakan variable untuk konsistensi */
+:root {
+  --sidebar-width: 250px;
+  --topbar-height: 100px;
+  --sidebar-color: #1e63b4;
+  --topbar-color: #ffffff;
+}
+
+/* FIX: Sidebar konsisten di semua halaman */
+.master-sidebar {
+  position: fixed !important;
+  top: var(--topbar-height) !important;
+  left: 0 !important;
+  width: var(--sidebar-width) !important;
+  height: calc(100vh - var(--topbar-height)) !important;
+  background-color: var(--sidebar-color) !important;
+  color: white !important;
+  z-index: 1000 !important;
+  overflow-y: auto !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* FIX: Topbar konsisten di semua halaman */
+.master-topbar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: var(--topbar-height) !important;
+  background: var(--topbar-color) !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 40px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+  z-index: 1001 !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+/* ================= MAIN CONTENT FIX - TABEL TANPA JARAK ================= */
+/* INI YANG PERLU DIPERBAIKI: Main content untuk tabel */
+.master-main-content {
+  position: relative !important;
+  margin-left: var(--sidebar-width) !important;
+  margin-top: var(--topbar-height) !important;
+  padding: 0 !important; /* ✅ HAPUS SEMUA PADDING GLOBAL */
+  width: calc(100% - var(--sidebar-width)) !important;
+  min-height: calc(100vh - var(--topbar-height)) !important;
+  background: #f8fafc !important;
+  overflow-y: auto !important;
+  z-index: 1 !important;
+}
+
+/* Container untuk konten tabel */
+.master-table-container {
+  padding: 25px !important; /* ✅ Hanya beri padding di container ini */
+  width: 100% !important;
+  min-height: calc(100vh - var(--topbar-height)) !important;
+  background: #f8fafc !important;
+  margin: 0 !important;
+  position: relative !important;
+}
+
+/* Section untuk tabel */
+.master-table-section {
+  background: white !important;
+  border-radius: 12px !important;
+  padding: 25px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  margin: 0 !important;
+  width: 100% !important;
+  border: 1px solid #e2e8f0 !important;
+  position: relative !important;
+}
+
+/* ================= TABLE FIX - TABEL FULL WIDTH ================= */
+/* Table wrapper */
+.table-wrapper-fixed {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: white !important;
+}
+
+/* Table itu sendiri */
+.table-fixed {
+  width: 100% !important;
+  min-width: 1200px !important;
+  margin: 0 !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+}
+
+/* Table header */
+.table-fixed thead {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+}
+
+.table-fixed th {
+  color: white !important;
+  padding: 16px !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15) !important;
+  white-space: nowrap !important;
+}
+
+/* Table body */
+.table-fixed tbody tr {
+  border-bottom: 1px solid #f1f5f9 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.table-fixed tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+.table-fixed td {
+  padding: 16px !important;
+  font-size: 14px !important;
+  vertical-align: middle !important;
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+/* Zebra striping */
+.table-fixed tbody tr:nth-child(even) {
+  background-color: #fafafa !important;
+}
+
+.table-fixed tbody tr:nth-child(even):hover {
+  background-color: #f0f9ff !important;
+}
+
+/* ================= HEADER ACTIONS FIX ================= */
+/* Search bar di header tabel */
+.table-header-actions {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 25px !important;
+  flex-wrap: wrap !important;
+  gap: 20px !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+/* Search form */
+.table-search-form {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex: 1 !important;
+  max-width: 450px !important;
+  min-width: 300px !important;
+}
+
+.table-search-input {
+  width: 100% !important;
+  padding: 0.75rem 1rem 0.75rem 2.8rem !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  font-size: 0.95rem !important;
+  background: white !important;
+  color: #334155 !important;
+}
+
+/* Button group */
+.table-button-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+/* ================= PAGINATION FIX ================= */
+.table-pagination-container {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 20px 0 0 0 !important;
+  margin-top: 20px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
+  background: transparent !important;
+}
+
+/* ================= RESPONSIVE FIX ================= */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+    --topbar-height: 70px;
+  }
+
+  .master-sidebar {
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s ease !important;
+  }
+
+  .master-sidebar.active {
+    transform: translateX(0) !important;
+    width: 250px !important;
+    z-index: 1002 !important;
+  }
+
+  .master-topbar {
+    height: 70px !important;
+    padding: 0 20px !important;
+  }
+
+  .master-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .master-table-container {
+    padding: 15px !important;
+  }
+
+  .master-table-section {
+    padding: 20px !important;
+  }
+
+  .table-header-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 15px !important;
+  }
+
+  .table-search-form {
+    max-width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .table-button-group {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+}
+
+/* ================= UTILITY CLASSES ================= */
+/* Hapus semua margin/padding yang tidak perlu */
+.no-margin {
+  margin: 0 !important;
+}
+.no-padding {
+  padding: 0 !important;
+}
+.no-gap {
+  gap: 0 !important;
+}
+.full-width {
+  width: 100% !important;
+}
+.full-height {
+  height: 100% !important;
+}
+
+/* Debug border untuk troubleshooting */
+.debug-red {
+  border: 1px solid red !important;
+}
+.debug-blue {
+  border: 1px solid blue !important;
+}
+.debug-green {
+  border: 1px solid green !important;
+}
+
+/* ================= FIX UNTUK FILE CSS SPESIFIK ================= */
+/* Override untuk MasterAset.css */
+body.master-aset-page .main-content {
+  position: relative !important;
+  margin-left: 250px !important;
+  margin-top: 100px !important;
+  padding: 0 !important;
+  width: calc(100% - 250px) !important;
+  min-height: calc(100vh - 100px) !important;
+  background: #f8fafc !important;
+  overflow-y: auto !important;
+  z-index: 1 !important;
+}
+
+body.master-aset-page .table-container {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: white !important;
+}
+
+body.master-aset-page .data-table {
+  width: 100% !important;
+  min-width: 1200px !important;
+  margin: 0 !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+}
+
+/* Override untuk Karyawan.css */
+body.karyawan-page .main-content {
+  position: relative !important;
+  margin-left: 250px !important;
+  margin-top: 100px !important;
+  padding: 0 !important;
+  width: calc(100% - 250px) !important;
+  min-height: calc(100vh - 100px) !important;
+  background: #f8fafc !important;
+  overflow-y: auto !important;
+  z-index: 1 !important;
+}
+
+body.karyawan-page .table-container {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: white !important;
+}
+
+/* Override untuk PeminjamanPengembalianAset.css */
+body.peminjaman-page .main-content {
+  position: relative !important;
+  margin-left: 250px !important;
+  margin-top: 100px !important;
+  padding: 0 !important;
+  width: calc(100% - 250px) !important;
+  min-height: calc(100vh - 100px) !important;
+  background: #f8fafc !important;
+  overflow-y: auto !important;
+  z-index: 1 !important;
+}
+
+body.peminjaman-page .table-container {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: white !important;
+}
+
+/* Override untuk PenjualanAset.css */
+body.penjualan-page .main-content {
+  position: relative !important;
+  margin-left: 250px !important;
+  margin-top: 100px !important;
+  padding: 0 !important;
+  width: calc(100% - 250px) !important;
+  min-height: calc(100vh - 100px) !important;
+  background: #f8fafc !important;
+  overflow-y: auto !important;
+  z-index: 1 !important;
+}
+
+body.penjualan-page .table-container {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: white !important;
+}
+
+/* Override untuk StokBarang.css */
+body.stok-page .main-content {
+  position: relative !important;
+  margin-left: 250px !important;
+  margin-top: 100px !important;
+  padding: 0 !important;
+  width: calc(100% - 250px) !important;
+  min-height: calc(100vh - 100px) !important;
+  background: #f8fafc !important;
+  overflow-y: auto !important;
+  z-index: 1 !important;
+}
+
+body.stok-page .table-container {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: white !important;
+}
+
+/* Override untuk KendalaBarang.css */
+body.kendala-page .main-content {
+  position: relative !important;
+  margin-left: 250px !important;
+  margin-top: 100px !important;
+  padding: 0 !important;
+  width: calc(100% - 250px) !important;
+  min-height: calc(100vh - 100px) !important;
+  background: #f8fafc !important;
+  overflow-y: auto !important;
+  z-index: 1 !important;
+}
+
+body.kendala-page .table-container {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: white !important;
+}
+
+/* ================= QUICK FIX ALTERNATIVE ================= */
+/* Jika masih ada masalah, coba gunakan ini sebagai solusi cepat: */
+
+/* Reset total untuk semua element di dalam main content */
+body.master-page .main-content > *,
+body.master-page .main-content > * > * {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Force table to be edge-to-edge */
+body.master-page .table-container,
+body.master-page [class*="table"] {
+  margin-left: -25px !important;
+  margin-right: -25px !important;
+  width: calc(100% + 50px) !important;
+}
+
+/* Atau gunakan calc untuk menghilangkan padding parent */
+body.master-page .main-content {
+  margin-left: calc(250px - 30px) !important; /* Kurangi padding dari sidebar */
+  margin-right: -30px !important; /* Hilangkan padding kanan */
+}
+
+/* Solusi nuclear option - hapus semua padding dari semua parent */
+body.master-page * {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.master-page .master-table-container {
+  padding: 25px !important; /* Hanya beri padding di sini */
+}

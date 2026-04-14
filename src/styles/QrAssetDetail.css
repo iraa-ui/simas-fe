@@ -1,0 +1,350 @@
+/* === GLOBAL CONTAINER === */
+.qr-detail-container {
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(130deg, #fafafa, #f1f5f9);
+}
+
+/* === ANIMATED BACKGROUND SHAPES === */
+.qr-detail-container::before,
+.qr-detail-container::after {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  opacity: 0.45;
+  filter: blur(70px);
+  animation: float 9s ease-in-out infinite alternate;
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.qr-detail-container::before {
+  top: -60px;
+  left: -40px;
+  background: #6366f1; /* ungu */
+}
+
+.qr-detail-container::after {
+  bottom: -60px;
+  right: -40px;
+  background: #3b82f6; /* biru */
+  animation-delay: 3s;
+}
+
+@keyframes float {
+  from {
+    transform: translateY(0px) translateX(0px);
+  }
+  to {
+    transform: translateY(40px) translateX(25px);
+  }
+}
+
+/* === SCAN INFO BOX === */
+.scan-info-box {
+  position: relative;
+  z-index: 2;
+  background: #ffffffdd;
+  backdrop-filter: blur(6px);
+  padding: 12px 18px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.scan-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.scan-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* === CARD WRAPPER === */
+.asset-card {
+  position: relative;
+  z-index: 2;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.06);
+  margin-bottom: 22px;
+  border: 1px solid #e5e7eb;
+}
+
+/* === IMAGE SECTION === */
+.image-section {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 16px;
+}
+
+.asset-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+/* NO IMAGE */
+.no-image-box {
+  height: 220px;
+  background: #e2e8f0;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.no-image-icon {
+  font-size: 40px;
+  color: #475569;
+}
+
+/* === INFO SECTION === */
+.info-section {
+  margin-top: 18px;
+}
+
+.asset-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+/* === BADGES === */
+.badge-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+/* === STATUS COLORS (ELEGANT VERSION) === */
+
+.badge-status-tersedia {
+  background: #e8f9f0;
+  color: #0f8f64;
+  border: 1.5px solid #34d399;
+}
+
+.badge-status-dipinjam {
+  background: #fff7e8;
+  color: #b7791f;
+  border: 1.5px solid #f6ad55;
+}
+
+.badge-status-dalam-perbaikan,
+.badge-status-permintaan-perbaikan {
+  background: #eef4ff;
+  color: #2f5fbf;
+  border: 1.5px solid #3b82f6;
+}
+
+.badge-status-tidak-tersedia {
+  background: #ffecec;
+  color: #c53030;
+  border: 1.5px solid #f87171;
+}
+
+.badge-status-belum-lunas {
+  background: #e6fbff;
+  color: #0e6677;
+  border: 1.5px solid #33e1f2;
+}
+
+.badge-status-terjual {
+  background: #e0fdf4;
+  color: #0f7a52;
+  border: 1.5px solid #34eb9c;
+}
+
+/* === CONDITION COLORS (ELEGANT VERSION) === */
+
+.badge-condition-baik {
+  background: #e7f8ef;
+  color: #067647;
+  border: 1.5px solid #4ade80;
+}
+
+.badge-condition-rusak {
+  background: #ffecec;
+  color: #b91c1c;
+  border: 1.5px solid #f87171;
+}
+
+/* === DETAIL LIST === */
+.detail-grid {
+  margin: 12px 0 20px 0;
+  border-radius: 12px;
+  background: #f9fafb;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
+/* === SPEC BOX === */
+.spec-box {
+  margin-bottom: 20px;
+}
+
+.spec-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spec-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.spec-content {
+  background: #f3f4f6;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #374151;
+  margin-top: 6px;
+}
+
+/* === META BOX === */
+.meta-box {
+  padding: 12px 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.meta-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.meta-value {
+  font-size: 12px;
+  color: #111827;
+}
+
+/* === FOOTER === */
+.app-footer {
+  margin-top: 25px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 12px;
+  z-index: 2;
+  position: relative;
+}
+
+.footer-main {
+  font-size: 13px;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+/* === HEADER BAR === */
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px; /* jarak sedikit lebih besar agar judul lebih ke kanan */
+  margin-bottom: 20px;
+  z-index: 3;
+  position: relative;
+}
+
+/* LOGO TANPA BACKGROUND PUTIH DAN DIPERBESAR */
+.header-logo {
+  width: 170px;
+  height: auto;
+  object-fit: contain;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* JUDUL DIPOSISIKAN LEBIH KE KANAN */
+.header-title {
+  font-size: 135%;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* === ENHANCED META BOX === */
+.enhanced-meta {
+  background: #f3f4f6;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 18px;
+}
+
+.enhanced-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.enhanced-meta-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.enhanced-meta-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  background: #e5e7eb;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+}

@@ -1,0 +1,317 @@
+/* ================= FORM INPUT STYLING - UPDATE ================= */
+
+/* Input, Select, Textarea Styling - UPDATE */
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background-color: #fff;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="date"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #1e63b4;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 99, 180, 0.1);
+}
+
+/* READONLY/DISABLED INPUT STYLING - NEW */
+.readonly-input,
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed !important;
+    color: #6c757d !important;
+    border: 1px solid #dee2e6 !important;
+    opacity: 1 !important;
+}
+
+/* Khusus untuk select yang disabled */
+.form-group select:disabled {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+/* Hover state untuk disabled elements */
+.form-group input:disabled:hover,
+.form-group select:disabled:hover,
+.form-group textarea:disabled:hover {
+    border-color: #dee2e6 !important;
+    box-shadow: none !important;
+}
+
+/* Error state untuk disabled inputs */
+.form-group input.error-input:disabled,
+.form-group select.error-input:disabled {
+    border-color: #dc3545 !important;
+    background-color: #f8f9fa !important;
+}
+
+/* Label untuk disabled fields */
+.form-group label:has(+ input:disabled),
+.form-group label:has(+ select:disabled),
+.form-group label:has(+ textarea:disabled) {
+    color: #6c757d;
+}
+
+/* ================= SELECT SPECIFIC STYLING - UPDATE ================= */
+.form-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.form-group select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231e63b4' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+}
+
+/* ================= EMPTY STATE STYLING - NEW ================= */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.empty-state-image {
+    width: 200px;
+    height: auto;
+    margin-bottom: 20px;
+    opacity: 0.7;
+}
+
+.empty-state-text {
+    color: #6c757d;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.loading-state p,
+.error-state p {
+    color: #6c757d;
+    font-size: 16px;
+    margin-top: 15px;
+}
+
+.btn-reset-compact {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.btn-reset-compact:hover {
+    background-color: #f8f9fa;
+}
+
+/* ================= RESPONSIVE DESIGN - UPDATE ================= */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .empty-state-image {
+        width: 150px;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-container {
+        padding: 15px;
+        margin: 10px;
+    }
+    
+    .empty-state {
+        padding: 40px 15px;
+    }
+    
+    .empty-state-image {
+        width: 120px;
+    }
+    
+    .empty-state-text {
+        font-size: 14px;
+    }
+}
+
+/* Dropdown Search Styles dengan Clear Icon */
+.dropdown-container-karyawan,
+.dropdown-container-barang {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-container input {
+  width: 100%;
+  padding: 8px 60px 8px 12px; /* More padding for icons */
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.search-input-container input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.input-icons {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-icon {
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  transition: color 0.2s;
+}
+
+.clear-icon:hover {
+  color: #dc3545;
+}
+
+.dropdown-icon {
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  transition: color 0.2s;
+}
+
+.dropdown-icon:hover {
+  color: #495057;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.rotate {
+  transform: rotate(180deg);
+}
+
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.dropdown-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+  background: white;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item.no-results {
+  color: #6c757d;
+  cursor: default;
+}
+
+.dropdown-item.no-results:hover {
+  background-color: white;
+}
+
+/* Error state */
+.error-input {
+  border-color: #dc3545 !important;
+}
+
+.error-input:focus {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 2px rgba(220,53,69,0.25) !important;
+}
+
+.error-text {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Disabled state */
+.disabled-input {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.7;
+}

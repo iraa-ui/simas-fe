@@ -1,0 +1,1254 @@
+.master-container {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f7fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ================= TOPBAR ================= */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.search-bar {
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin-right: 20px;
+}
+
+.profile-name {
+  font-weight: 600;
+  color: #1e63b4;
+}
+
+/* ================= LOGO & NAVBAR ================= */
+.logo-img {
+  width: none;
+  height: 60px;
+  object-fit: contain;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+  width: 250px;
+  background-color: #1e63b4;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  height: calc(100vh - 100px);
+  position: fixed;
+  top: 100px;
+  left: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin-bottom: 10px;
+}
+
+.sidebar-menu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-decoration: none;
+  padding: 12px 10px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.sidebar-menu li a:hover {
+  background-color: #174f91;
+}
+
+.sidebar-menu a.active {
+  background-color: white;
+  color: #0057b8;
+  font-weight: bold;
+}
+
+/* ================= MAIN CONTENT ================= */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 100px;
+  margin-left: 250px;
+  padding: 20px 30px;
+  overflow-y: auto;
+}
+
+/* ================= PAGE HEADER ================= */
+.page-header {
+  margin: 30px 0 25px 0; /* ✅ TAMBAH margin bottom untuk jarak ke bawah */
+  padding-top: 10px; /* ✅ TAMBAH padding top untuk jarak dari atas */
+  padding: 0;
+  display: block;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  margin: 0 0 5px 0;
+  color: #1a237e;
+  font-weight: 700;
+}
+
+.header-date {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 15px;
+  display: inline-block;
+}
+
+/* ================= PERUBAHAN: SECTION HEADER TANPA BACKGROUND ================= */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: transparent; /* ✅ HAPUS background */
+  padding: 0; /* ✅ HAPUS padding */
+  border: none; /* ✅ HAPUS border */
+  box-shadow: none; /* ✅ HAPUS box-shadow */
+}
+
+.section-header h2 {
+  color: #333;
+  font-weight: 700;
+  margin: 0;
+  font-size: 1.5rem;
+  width: auto;
+  display: inline-block;
+}
+
+/* ================= PERUBAHAN: HEADER ACTIONS TANPA BACKGROUND ================= */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: space-between;
+  background: transparent; /* ✅ HAPUS background abu-abu */
+  padding: 0; /* ✅ HAPUS padding */
+  border: none; /* ✅ HAPUS border */
+  border-radius: 0; /* ✅ HAPUS border-radius */
+  box-shadow: none; /* ✅ HAPUS box-shadow */
+}
+
+/* Search Form Compact */
+.search-form-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-input-group-compact {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.search-icon-compact {
+  position: absolute;
+  left: 12px;
+  color: #6c757d;
+  z-index: 1;
+  font-size: 14px;
+}
+
+.search-input-compact {
+  width: 100%;
+  padding: 0.6rem 2.5rem 0.6rem 2.5rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.search-input-compact:focus {
+  outline: none;
+  border-color: #1e63b4;
+  box-shadow: 0 0 0 3px rgba(30, 99, 180, 0.1);
+}
+
+.btn-reset-compact {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-reset-compact:hover {
+  background: #f8f9fa;
+  color: #dc3545;
+}
+
+.btn-search-compact {
+  background: linear-gradient(135deg, #1e63b4 0%, #0057b8 100%);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-search-compact:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(30, 99, 180, 0.3);
+}
+
+.btn-tambah {
+  background-color: #1e63b4;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.btn-tambah:hover {
+  background-color: #0d4b99;
+}
+
+/* ================= TABLE ================= */
+.table-container {
+  background-color: white;
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+}
+
+.data-table th {
+  background-color: #0057b8;
+  color: white;
+  padding: 12px;
+  text-align: left;
+}
+
+.data-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #ddd;
+  vertical-align: middle;
+  background: none !important;
+}
+
+.data-table tr {
+  height: 60px;
+}
+
+.data-table tr:hover {
+  background-color: #f0f8ff;
+}
+
+.data-table th:last-child {
+  text-align: center;
+}
+
+.aksi-cell {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background: none !important;
+  border: none !important;
+  position: relative;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.popup-actions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 10px);
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.popup-actions button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.popup-actions button:hover {
+  background: #f0f8ff;
+}
+
+.aksi-btn {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  background: transparent !important;
+  margin-top: 1px;
+}
+
+.aksi-btn:hover {
+  transform: scale(1.15);
+  opacity: 0.8;
+}
+
+.aksi-btn.view svg {
+  color: #007bff;
+}
+.aksi-btn.edit svg {
+  color: #28a745;
+}
+.aksi-btn.delete svg {
+  color: #dc3545;
+}
+
+.aksi-btn.view:hover svg {
+  color: #0056b3;
+}
+.aksi-btn.edit:hover svg {
+  color: #1e7e34;
+}
+.aksi-btn.delete:hover svg {
+  color: #b02a37;
+}
+
+/* ================= PAGINATION ================= */
+.pagination {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin-top: 15px;
+  padding: 10px 0;
+}
+
+.pagination button {
+  padding: 6px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  border: 1px solid #1e63b4;
+  background: white;
+  color: #1e63b4;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pagination button.active,
+.pagination button:hover {
+  background-color: #1e63b4;
+  color: white;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f0f4f8;
+  color: #6c757d;
+}
+
+/* ================= READONLY INPUT ================= */
+.readonly-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.readonly-input:focus {
+  border-color: #ddd;
+  outline: none;
+  box-shadow: none;
+}
+
+.readonly-input[type="textarea"] {
+  resize: none;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ================= SEARCH ERROR MESSAGE ================= */
+.search-error-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.error-icon {
+  color: #f39c12;
+  font-size: 1.1rem;
+}
+
+.btn-clear-search {
+  background: #f39c12;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-left: auto;
+  transition: all 0.3s ease;
+}
+
+.btn-clear-search:hover {
+  background: #e67e22;
+}
+
+/* ================= NO DATA CONTAINER ================= */
+.no-data-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.no-data-image {
+  width: 200px;
+  height: auto;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.no-data-text {
+  color: #6c757d;
+  font-size: 1rem;
+  text-align: center;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ================= MODAL KONFIRMASI HAPUS ================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-confirm {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  background: #dc3545;
+  color: white;
+  padding: 20px;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 25px 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-body p {
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+  color: #333;
+}
+
+.modal-body strong {
+  color: #1e63b4;
+}
+
+.warning-text {
+  color: #dc3545 !important;
+  font-weight: 500;
+  background: #ffe6e6;
+  padding: 10px;
+  border-radius: 6px;
+  border-left: 4px solid #dc3545;
+}
+
+.modal-actions {
+  padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.btn-cancel:hover {
+  background: #5a6268;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.btn-delete:disabled {
+  background: #aeb5c2;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ================= DETAIL MODAL STYLES - UPDATED ================= */
+.detail-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.detail-modal-content {
+  background: white;
+  width: 500px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s ease;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.detail-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+}
+
+.detail-modal-header h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.detail-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.detail-modal-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.detail-modal-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.detail-info-section {
+  margin-bottom: 24px;
+}
+
+.detail-info-group {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.detail-group-title {
+  margin: 0 0 16px 0;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.detail-info-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: start;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 12px;
+}
+
+.detail-info-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #4b5563;
+  text-align: none;
+}
+
+.detail-value {
+  color: #1f2937;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+/* Status Badge Styles untuk pada kolom status */
+.pp-status-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-block;
+  text-align: center;
+  min-width: 100px;
+}
+
+.pp-status-badge.dipinjam {
+  background-color: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.pp-status-badge.dikembalikan {
+  background-color: #d1ecf1;
+  color: #068124;
+  border: 1px solid #bee5eb;
+}
+
+.pp-status-badge.sedang-diperbaiki {
+  background-color: #c6e8ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+/* Status Badge Styles untuk Detail Modal */
+.detail-status-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-block;
+  text-align: center;
+  min-width: 100px;
+}
+
+.detail-status-badge.status-dipinjam {
+  background-color: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.detail-status-badge.status-dikembalikan {
+  background-color: #d1ecf1;
+  color: #068124;
+  border: 1px solid #bee5eb;
+}
+
+.detail-status-badge.status-sedang-diperbaikan {
+  background-color: #c6e8ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+/* Action Buttons in Detail Modal */
+.detail-modal-actions {
+  padding: 20px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #f8f9fa;
+}
+
+.btn-action-edit {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-action-edit:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.btn-action-close {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-action-close:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1024px) {
+  .search-input-compact {
+    width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .main-content {
+    margin-left: 200px;
+    padding: 15px;
+  }
+
+  .search-bar {
+    width: 200px;
+  }
+
+  .page-header {
+    padding: 1rem 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-input-compact {
+    width: 200px;
+  }
+
+  .status-badge {
+    min-width: 100px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  /* Detail Modal Responsive */
+  .detail-modal-content {
+    width: 100%;
+  }
+
+  .detail-info-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .detail-label {
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .detail-modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-action-edit,
+  .btn-action-close {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .master-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    top: 0;
+  }
+
+  .main-content {
+    margin: 0;
+    padding: 10px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .search-form-compact {
+    width: 100%;
+  }
+
+  .search-input-compact {
+    width: 100%;
+  }
+
+  .btn-tambah {
+    align-self: flex-end;
+  }
+
+  .page-header {
+    padding: 1rem;
+    margin: 0.5rem 0;
+  }
+
+  .page-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .search-error-message {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .btn-clear-search {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+
+  .modal-confirm {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-delete {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .status-badge {
+    min-width: 80px;
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  /* Detail Modal Mobile */
+  .detail-modal-header {
+    padding: 15px 20px;
+  }
+
+  .detail-modal-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .detail-modal-body {
+    padding: 20px;
+  }
+
+  .detail-info-group {
+    padding: 15px;
+  }
+
+  .detail-group-title {
+    font-size: 1rem;
+  }
+
+  .detail-label {
+    min-width: 120px;
+    font-size: 0.9rem;
+  }
+
+  .detail-value {
+    font-size: 0.9rem;
+  }
+}
+
+.disabled-input {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.8 !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+.disabled-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #dee2e6 !important;
+}
+
+/* 🔹 Header Actions - DIKOREKSI */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* 🔹 Filter Dropdown Container - BARU */
+.filter-dropdown-container {
+  display: flex;
+  align-items: center;
+}
+
+/* 🔹 Filter Dropdown Styles - DIKOREKSI */
+.filter-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.filter-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+  justify-content: space-between;
+}
+
+.filter-dropdown-toggle:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s ease;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.dropdown-arrow.rotate {
+  transform: rotate(180deg);
+}
+
+.filter-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 1000;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.filter-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: #fff;
+  border: none;
+  text-align: left;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.filter-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.filter-dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.filter-dropdown-item.active {
+  background: #3b82f6;
+  color: white;
+}
+
+.filter-dropdown-item.active:hover {
+  background: #2563eb;
+}
+
+/* 🔹 Search Form Compact - DIKOREKSI */
+.search-form-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 400px;
+}
+
+/* 🔹 Responsive Design */
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .search-form-compact {
+    max-width: 100%;
+    order: 1;
+  }
+
+  .filter-dropdown-container {
+    order: 2;
+  }
+
+  .btn-tambah {
+    order: 3;
+  }
+
+  .filter-dropdown {
+    width: 100%;
+  }
+
+  .filter-dropdown-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-dropdown-menu {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .header-actions {
+    justify-content: space-between;
+  }
+
+  .search-form-compact {
+    margin-right: auto;
+  }
+
+  .filter-dropdown-container {
+    margin-left: auto;
+  }
+}
+
+/* ================= LOADING STATE ================= */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #718096;
+  font-size: 1rem;
+}
+
+.loading-state::after {
+  content: "";
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #4a90e2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-top: 15px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

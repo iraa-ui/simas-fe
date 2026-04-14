@@ -1,0 +1,20 @@
+variables:
+  CLIENT: "internal" ## Must be external or internal
+  PROJECT_NAME: "simas79" ## Project name
+  TYPE: "other" ## Must be java or other
+
+stages:
+  - retrieve-config
+  - build
+  - deploy
+
+include:
+  - project: "playground/centralized_ci_cd/cicd-config"
+    ref: development
+    file: "/k8s/ci-passing-config.yaml"
+  - project: "playground/centralized_ci_cd/cicd-config"
+    ref: development
+    file: "/k8s/ci-build.yaml"
+  - project: "playground/centralized_ci_cd/cicd-config"
+    ref: development
+    file: "/k8s/ci-deploy-k8s-update.yaml"

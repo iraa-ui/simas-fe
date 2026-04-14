@@ -1,0 +1,291 @@
+/* ================= DASHBOARD ISOLATED STYLES ================= */
+/* HANYA berlaku untuk body dengan class dashboard-page */
+body.dashboard-page .dashboard-container {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+  background-color: #f5f7fa !important;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  gap: 20px !important;
+}
+
+body.dashboard-page .dashboard-header {
+  text-align: left !important;
+  margin-bottom: 10px !important;
+}
+
+body.dashboard-page .dashboard-header h1 {
+  font-size: 2rem !important;
+  margin: 0 0 5px 0 !important;
+  color: #1a237e !important;
+  font-weight: 700 !important;
+}
+
+body.dashboard-page .dashboard-header p {
+  margin: 0 !important;
+  color: #666 !important;
+  font-size: 1rem !important;
+}
+
+/* Grid container utama */
+body.dashboard-page .dashboard-container > .MuiGrid-container {
+  gap: 20px !important;
+}
+
+body.dashboard-page .dashboard-container > .MuiGrid-container > .MuiGrid-item {
+  padding: 0 !important;
+}
+
+/* Stat Cards - diatur dalam grid horizontal */
+body.dashboard-page .dashboard-container > .MuiGrid-container:first-of-type {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 20px !important;
+  margin-top: 0 !important;
+}
+
+body.dashboard-page .dashboard-container > .MuiGrid-container:first-of-type > .MuiGrid-item {
+  width: 100% !important;
+  flex-basis: auto !important;
+}
+
+/* ===== BACKGROUND STAT CARD FULL BIRU LANGIT ===== */
+body.dashboard-page .stat-card {
+  min-height: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+  border: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+body.dashboard-page .stat-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.dashboard-page .stat-card-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-weight: 600 !important;
+  margin-bottom: 10px !important;
+  color: #1e40af !important;
+  font-size: 0.9rem !important;
+}
+
+body.dashboard-page .stat-card-header svg {
+  color: #1e40af !important;
+}
+
+body.dashboard-page .stat-card-value {
+  font-size: 2.2rem !important;
+  font-weight: bold !important;
+  color: #1e3a8a !important;
+}
+
+/* ===== BACKGROUND CARD CONTENT JUGA BIRU LANGIT ===== */
+body.dashboard-page .stat-card .MuiCardContent-root {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+  border-radius: 12px !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+/* Layout utama - dua kolom */
+body.dashboard-page .dashboard-container > .MuiGrid-container:last-of-type {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 20px !important;
+  margin-top: 0 !important;
+}
+
+body.dashboard-page .dashboard-container > .MuiGrid-container:last-of-type > .MuiGrid-item {
+  width: 100% !important;
+  flex-basis: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+/* Panel Cards - TETAP PUTIH */
+body.dashboard-page .panel-card {
+  margin-bottom: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+}
+
+body.dashboard-page .panel-card .MuiCardContent-root {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 20px !important;
+  background: white !important;
+}
+
+body.dashboard-page .panel-card-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-weight: 600 !important;
+  margin-bottom: 15px !important;
+  color: #1a237e !important;
+  font-size: 1.1rem !important;
+  border-bottom: 2px solid #e0e0e0 !important;
+  padding-bottom: 10px !important;
+}
+
+body.dashboard-page .panel-card-header svg {
+  color: #1976d2 !important;
+}
+
+/* Chart Containers */
+body.dashboard-page .pie-chart-container,
+body.dashboard-page .bar-chart-container {
+  width: 100% !important;
+  height: 250px !important;
+  flex: 1 !important;
+  margin-top: 10px !important;
+}
+
+/* List Items */
+body.dashboard-page .panel-card .MuiList-root {
+  flex: 1 !important;
+  padding: 0 !important;
+}
+
+body.dashboard-page .panel-card .MuiListItem-root {
+  padding: 12px 0 !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+body.dashboard-page .panel-card .MuiListItem-root:last-child {
+  border-bottom: none !important;
+}
+
+body.dashboard-page .panel-card .MuiListItemText-primary {
+  font-weight: 500 !important;
+  color: #333 !important;
+  font-size: 0.95rem !important;
+}
+
+body.dashboard-page .panel-card .MuiListItemText-secondary {
+  color: #666 !important;
+  font-size: 0.85rem !important;
+}
+
+body.dashboard-page .panel-card .MuiIconButton-root {
+  color: #1976d2 !important;
+  padding: 4px !important;
+}
+
+/* Legend dan Tooltip Charts */
+body.dashboard-page .recharts-legend-wrapper {
+  padding-top: 10px !important;
+}
+
+body.dashboard-page .recharts-default-legend {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 15px !important;
+}
+
+body.dashboard-page .recharts-legend-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+/* Footer */
+body.dashboard-page .dashboard-footer {
+  margin-top: 30px !important;
+  text-align: center !important;
+  padding: 15px 0 !important;
+  font-size: 0.9rem !important;
+  color: #777 !important;
+  border-top: 1px solid #ddd !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  body.dashboard-page .dashboard-container > .MuiGrid-container:last-of-type {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body.dashboard-page .dashboard-container {
+    padding: 15px !important;
+    gap: 15px !important;
+  }
+
+  body.dashboard-page .dashboard-container > .MuiGrid-container:first-of-type {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+
+  body.dashboard-page .stat-card-value {
+    font-size: 1.8rem !important;
+  }
+
+  body.dashboard-page .dashboard-header h1 {
+    font-size: 1.6rem !important;
+  }
+
+  body.dashboard-page .pie-chart-container,
+  body.dashboard-page .bar-chart-container {
+    height: 200px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body.dashboard-page .dashboard-container {
+    padding: 10px !important;
+  }
+
+  body.dashboard-page .panel-card .MuiCardContent-root {
+    padding: 15px !important;
+  }
+
+  body.dashboard-page .stat-card-value {
+    font-size: 1.6rem !important;
+  }
+}
+
+/* ================= OVERRIDE UNTUK MENGATASI KONFLIK ================= */
+/* Pastikan halaman master TIDAK kena style dashboard */
+body:not(.dashboard-page) .dashboard-container,
+body.master-page .dashboard-container,
+body.master-aset-page .dashboard-container,
+body.karyawan-page .dashboard-container,
+body.peminjaman-page .dashboard-container,
+body.penjualan-page .dashboard-container,
+body.stok-page .dashboard-container,
+body.kendala-page .dashboard-container {
+  all: unset !important;
+  display: block !important;
+}
+
+/* Pastikan card dan tombol dashboard tidak kena style tabel */
+body:not(.dashboard-page) .stat-card,
+body:not(.dashboard-page) .panel-card,
+body:not(.dashboard-page) .dashboard-button,
+body.master-page .stat-card,
+body.master-page .panel-card,
+body.master-page .dashboard-button {
+  all: unset !important;
+  display: block !important;
+}
