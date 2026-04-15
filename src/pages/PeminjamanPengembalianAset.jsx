@@ -25,14 +25,15 @@ function PeminjamanPengembalianAset() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [dataPeminjaman, setDataPeminjaman] = useState([]);
-  const [allData, setAllData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  // 🔹 State Management
+  const [dataPeminjaman, setDataPeminjaman] = useState([]); // Data yang ditampilkan (hasil filter/search)
+  const [allData, setAllData] = useState([]); // Master data asli dari API
+  const [loading, setLoading] = useState(true); // Status loading saat fetch data
+  const [error, setError] = useState(false); // Status jika terjadi error API
+  const [searchQuery, setSearchQuery] = useState(""); // Input pencarian
+  const [deleteLoading, setDeleteLoading] = useState(false); // Status loading saat proses hapus
 
-  // 🔹 State untuk detail modal
+  // 🔹 Modal Detail State
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -40,14 +41,15 @@ function PeminjamanPengembalianAset() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // 🔹 State untuk Filter Dropdown
+  // 🔹 Filter Dropdown State
   const [activeFilter, setActiveFilter] = useState("semua");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
+  // 🔹 Effect: Fetch data pertama kali & handling Alert Sukses dari navigasi luar
   useEffect(() => {
     fetchData();
 
-    // 🔹 CEK APAKAH ADA STATE SUCCESS DARI HALAMAN TAMBAH/EDIT
+    // Cek jika user baru saja kembali dari form Tambah/Edit dengan state sukses
     if (location.state?.showSuccessAlert) {
       Swal.fire({
         title: "Berhasil!",
@@ -57,11 +59,12 @@ function PeminjamanPengembalianAset() {
         showConfirmButton: false,
       });
 
-      // 🔹 HAPUS STATE AGAR TIDAK MUNCUL LAGI SAAT REFRESH
+      // Bersihkan state lokasi agar alert tidak muncul berulang saat refresh
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location]);
 
+  // 🔹 Fungsi Mengambil Data dari API
   const fetchData = () => {
     setLoading(true);
     setError(false);
@@ -69,6 +72,7 @@ function PeminjamanPengembalianAset() {
     mockApi
       .get(API_URL, { timeout: 5000 })
       .then((response) => {
+        // Normalisasi response data dari berbagai kemungkinan struktur API
         const hasil =
           response.data.data || response.data.peminjaman || response.data || [];
 
@@ -85,7 +89,7 @@ function PeminjamanPengembalianAset() {
       });
   };
 
-  // 🔹 FUNGSI FILTER DATA
+  // 🔹 Fungsi Filter berdasarkan Status (Tab/Dropdown)
   const applyFilter = (filterType) => {
     setActiveFilter(filterType);
     setCurrentPage(1);
@@ -105,7 +109,7 @@ function PeminjamanPengembalianAset() {
         case "dikembalikan":
           return status === "dikembalikan";
         case "sedang-diperbaiki":
-          // 🔥 PERBAIKAN: Handle kedua kemungkinan penulisan
+          // Handle variasi penulisan string status dari backend
           return (
             status === "sedang diperbaiki" ||
             status === "sedang diperbaikan" ||
@@ -119,22 +123,22 @@ function PeminjamanPengembalianAset() {
     setDataPeminjaman(filteredData);
   };
 
-  // 🔹 FUNGSI PAGINATION
+  // 🔹 Fungsi Navigasi Halaman (Pagination)
   const paginate = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
     setCurrentPage(pageNumber);
   };
 
-  // 🔹 Fungsi untuk mengubah jumlah item per halaman
+  // 🔹 Fungsi Mengubah Jumlah Baris per Halaman
   const handleItemsPerPageChange = (value) => {
     setItemsPerPage(parseInt(value));
     setCurrentPage(1);
   };
 
-  // 🔹 Fungsi untuk pencarian data OTOMATIS
+  // 🔹 Effect: Fungsi Pencarian (Dijalankan otomatis saat searchQuery berubah)
   useEffect(() => {
     if (!searchQuery.trim()) {
-      applyFilter(activeFilter);
+      applyFilter(activeFilter); // Jika search kosong, kembalikan ke filter aktif
       setCurrentPage(1);
       return;
     }
@@ -152,12 +156,13 @@ function PeminjamanPengembalianAset() {
         ""
       ).toLowerCase();
 
+      // Cari berdasarkan nama karyawan ATAU nama barang
       return (
         namaKaryawan.includes(searchLower) || namaBarang.includes(searchLower)
       );
     });
 
-    // Apply filter tambahan pada hasil search
+    // Tetap terapkan filter status pada hasil pencarian
     if (activeFilter !== "semua") {
       hasil = hasil.filter((item) => {
         const status = item.status?.toLowerCase() || "";
@@ -181,7 +186,7 @@ function PeminjamanPengembalianAset() {
     setCurrentPage(1);
   }, [searchQuery, allData, activeFilter]);
 
-  // 🔹 Fungsi untuk konfirmasi hapus data
+  // 🔹 Fungsi Hapus Data dengan Konfirmasi SweetAlert2
   const confirmDelete = async (item) => {
     const result = await Swal.fire({
       title: "Apakah Anda yakin?",
@@ -210,12 +215,13 @@ function PeminjamanPengembalianAset() {
           showConfirmButton: false,
         });
 
-        fetchData();
+        fetchData(); // Refresh data setelah hapus
       } catch (error) {
         console.error("Gagal menghapus data:", error);
 
         let errorMessage = "Terjadi kesalahan saat menghapus data.";
 
+        // Handling error spesifik (misal: data dilarang hapus jika masih dipinjam)
         if (error.response?.status === 403) {
           errorMessage =
             error.response.data.message ||
@@ -238,26 +244,27 @@ function PeminjamanPengembalianAset() {
     }
   };
 
+  // 🔹 Fungsi Reset Search
   const handleResetSearch = () => {
     setSearchQuery("");
     applyFilter(activeFilter);
     setCurrentPage(1);
   };
 
-  // 🔹 Fungsi untuk membuka detail modal
+  // 🔹 Fungsi Modal (Open/Close)
   const openDetailModal = (item) => {
     setSelectedItem(item);
     setShowDetailModal(true);
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = "hidden"; // Mencegah scrolling background
   };
 
-  // 🔹 Fungsi untuk menutup detail modal
   const closeDetailModal = () => {
     setShowDetailModal(false);
     setSelectedItem(null);
-    document.body.style.overflow = "auto";
+    document.body.style.overflow = "auto"; // Mengembalikan scrolling
   };
 
+  // 🔹 Helper: Format Tanggal ke lokal Indonesia
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     try {
@@ -272,7 +279,7 @@ function PeminjamanPengembalianAset() {
     }
   };
 
-  // 🔹 Get display text untuk filter dropdown
+  // 🔹 Helper: Label Text untuk Dropdown Filter
   const getFilterDisplayText = () => {
     switch (activeFilter) {
       case "semua":
@@ -288,19 +295,18 @@ function PeminjamanPengembalianAset() {
     }
   };
 
-  // 🔹 Pagination Calculations
+  // 🔹 Kalkulasi Logika Pagination
   const totalPages = Math.ceil(dataPeminjaman.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentData = dataPeminjaman.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Buat array angka halaman [1, 2, 3, ...]
   const pageNumbers = [];
   for (let i = 1; i <= totalPages; i++) {
     pageNumbers.push(i);
   }
 
-  // Function untuk mendapatkan class status badge di tabel
+  // 🔹 Helper: Styling CSS Badge Status di Tabel
   const getStatusBadge = (status) => {
     if (!status) return "pp-status-badge";
 
@@ -316,7 +322,7 @@ function PeminjamanPengembalianAset() {
     return "pp-status-badge";
   };
 
-  // Function untuk mendapatkan class status badge di modal detail
+  // 🔹 Helper: Styling CSS Badge Status di Modal Detail
   const getDetailStatusBadge = (status) => {
     if (!status) return "detail-status-badge";
 
@@ -334,7 +340,7 @@ function PeminjamanPengembalianAset() {
     return "detail-status-badge";
   };
 
-  // 🔹 Fungsi untuk format tampilan status
+  // 🔹 Helper: Merapikan tampilan teks status
   const formatStatusDisplay = (status) => {
     if (!status) return "-";
 
@@ -346,11 +352,10 @@ function PeminjamanPengembalianAset() {
       return "Sedang Diperbaiki";
     }
 
-    // Untuk status lain, tampilkan seperti biasa
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  // 🔹 Fungsi untuk menampilkan state kosong
+  // 🔹 Render: Komponen UI saat data kosong
   const renderEmptyState = () => {
     return (
       <div className="empty-state">
@@ -372,7 +377,6 @@ function PeminjamanPengembalianAset() {
         showDetailModal ? "modal-open" : ""
       }`}
     >
-      {/* Main content */}
       <main className="master-main-content-fixed">
         <div className="page-header">
           <h1>Peminjaman dan Pengembalian Aset</h1>
@@ -381,7 +385,7 @@ function PeminjamanPengembalianAset() {
         <section className="master-table-section-fixed">
           <div className="section-header">
             <div className="header-actions">
-              {/* Search Form - OTOMATIS */}
+              {/* Bagian Input Search */}
               <div className="search-form-compact">
                 <div className="search-input-group-compact">
                   <FaSearch className="search-icon-compact" />
@@ -405,7 +409,7 @@ function PeminjamanPengembalianAset() {
                 </div>
               </div>
 
-              {/* 🔹 FILTER DROPDOWN */}
+              {/* Bagian Dropdown Filter */}
               <div className="filter-dropdown-container">
                 <div className="filter-dropdown">
                   <button
@@ -459,7 +463,7 @@ function PeminjamanPengembalianAset() {
                 </div>
               </div>
 
-              {/* Tombol Tambah Data */}
+              {/* Tombol Navigasi ke Halaman Tambah */}
               <button
                 className="btn-tambah"
                 onClick={() => navigate("/app/peminjaman-pengembalian/tambah")}
@@ -469,6 +473,7 @@ function PeminjamanPengembalianAset() {
             </div>
           </div>
 
+          {/* Bagian Tabel Utama */}
           <div className="table-container-fixed">
             {loading ? (
               <div className="loading-state">
@@ -552,10 +557,9 @@ function PeminjamanPengembalianAset() {
             )}
           </div>
 
-          {/* 🔹 PAGINATION BARU - Row Page di Kiri, Pagination di Kanan */}
+          {/* Bagian Footer: Pagination & Info Baris */}
           {!loading && dataPeminjaman.length > 0 && (
             <div className="pagination-container">
-              {/* Row Page Selection - Kiri */}
               <div className="row-page-selection">
                 <span className="row-page-label">Rows per page:</span>
                 <select
@@ -575,7 +579,6 @@ function PeminjamanPengembalianAset() {
                 </span>
               </div>
 
-              {/* Pagination Controls - Kanan */}
               <div className="pagination-controls">
                 <button
                   onClick={() => paginate(currentPage - 1)}
@@ -610,7 +613,7 @@ function PeminjamanPengembalianAset() {
         </section>
       </main>
 
-      {/* 🔹 Detail Modal Fullscreen - Sama seperti StokBarang */}
+      {/* Bagian Modal Detail: Muncul saat tombol mata diklik */}
       {showDetailModal && selectedItem && (
         <div className="detail-fullscreen-overlay" onClick={closeDetailModal}>
           <div
@@ -628,7 +631,6 @@ function PeminjamanPengembalianAset() {
 
             <div className="detail-fullscreen-content">
               <div className="detail-fullscreen-grid">
-                {/* Informasi Utama Peminjaman */}
                 <div className="detail-main-info">
                   <h3>Informasi Peminjaman</h3>
                   <div className="info-grid">

@@ -15,13 +15,14 @@ import {
 import "../styles/EditTambahPeminjamanPengembalian.css";
 import logo from "../assets/logo.png";
 
-// Import SweetAlert
+// Import SweetAlert untuk notifikasi pop-up
 import Swal from "sweetalert2";
 
 function TambahPeminjamanPengembalian() {
   const navigate = useNavigate();
   const BASE_URL = "/pinjamkembalis";
 
+  // State untuk menyimpan data form input
   const [formData, setFormData] = useState({
     id_karyawan: "",
     id_inventaris: "",
@@ -30,18 +31,19 @@ function TambahPeminjamanPengembalian() {
     status: "Dipinjam", // 🔹 Default status Dipinjam
   });
 
+  // State untuk list data dari API dan status loading/error
   const [karyawanList, setKaryawanList] = useState([]);
   const [inventarisList, setInventarisList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // State untuk search
+  // State untuk menangani fitur pencarian dan tampilan dropdown
   const [searchKaryawan, setSearchKaryawan] = useState("");
   const [searchBarang, setSearchBarang] = useState("");
   const [showDropdownKaryawan, setShowDropdownKaryawan] = useState(false);
   const [showDropdownBarang, setShowDropdownBarang] = useState(false);
 
-  // 🔹 Ambil daftar karyawan
+  // 🔹 useEffect untuk mengambil daftar karyawan saat komponen pertama kali dimuat
   useEffect(() => {
     mockApi
       .get(`/karyawans`)
@@ -56,7 +58,7 @@ function TambahPeminjamanPengembalian() {
       });
   }, []);
 
-  // 🔹 STEP 1: Ambil daftar barang (inventaris) - HANYA yang TERSEDIA dan KONDISI BAIK
+  // 🔹 useEffect untuk mengambil daftar barang (inventaris) dengan filter khusus
   useEffect(() => {
     mockApi
       .get(`/inventaris`)
@@ -64,16 +66,12 @@ function TambahPeminjamanPengembalian() {
         console.log("📦 Data Inventaris:", res.data);
         const data = res.data.data || res.data;
 
-        // Filter barang:
-        // - Status Tersedia DAN kondisi Baik
-        // - Jangan tampilkan:
-        //   * Status tidak tersedia tapi kondisi baik
-        //   * Status tersedia tapi kondisi rusak
+        // Filter barang: Hanya yang berstatus "Tersedia" dan berkondisi "Baik"
         const filteredItems = data.filter((item) => {
           const status = item.status?.toLowerCase() || "";
           const kondisi = item.kondisi?.toLowerCase() || "";
 
-          // Hanya tampilkan barang dengan status "tersedia" dan kondisi "baik"
+          // Kondisi filter peminjaman
           return status === "tersedia" && kondisi === "baik";
         });
 
@@ -94,7 +92,7 @@ function TambahPeminjamanPengembalian() {
       });
   }, []);
 
-  // 🔹 Filter data berdasarkan search
+  // 🔹 Logika Filter data list berdasarkan input pencarian user
   const filteredKaryawan = karyawanList.filter((karyawan) =>
     karyawan.nama?.toLowerCase().includes(searchKaryawan.toLowerCase())
   );
@@ -103,27 +101,27 @@ function TambahPeminjamanPengembalian() {
     barang.nama_barang?.toLowerCase().includes(searchBarang.toLowerCase())
   );
 
-  // 🔹 Handle input perubahan value form
+  // 🔹 Fungsi untuk menangani perubahan input teks/date standar
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 Handle select karyawan
+  // 🔹 Fungsi saat user memilih salah satu karyawan dari dropdown
   const handleSelectKaryawan = (id, nama) => {
     setFormData((prev) => ({ ...prev, id_karyawan: id }));
     setSearchKaryawan(nama);
     setShowDropdownKaryawan(false);
   };
 
-  // 🔹 Handle select barang
+  // 🔹 Fungsi saat user memilih salah satu barang dari dropdown
   const handleSelectBarang = (id, nama) => {
     setFormData((prev) => ({ ...prev, id_inventaris: id }));
     setSearchBarang(nama);
     setShowDropdownBarang(false);
   };
 
-  // 🔹 Handle search input change untuk karyawan
+  // 🔹 Handler untuk input pencarian karyawan (trigger dropdown)
   const handleSearchKaryawanChange = (e) => {
     setSearchKaryawan(e.target.value);
     setShowDropdownKaryawan(true);
@@ -132,7 +130,7 @@ function TambahPeminjamanPengembalian() {
     }
   };
 
-  // 🔹 Handle search input change untuk barang
+  // 🔹 Handler untuk input pencarian barang (trigger dropdown)
   const handleSearchBarangChange = (e) => {
     setSearchBarang(e.target.value);
     setShowDropdownBarang(true);
@@ -141,17 +139,17 @@ function TambahPeminjamanPengembalian() {
     }
   };
 
-  // 🔹 Toggle dropdown untuk karyawan
+  // 🔹 Fungsi toggle manual dropdown karyawan
   const toggleDropdownKaryawan = () => {
     setShowDropdownKaryawan(!showDropdownKaryawan);
   };
 
-  // 🔹 Toggle dropdown untuk barang
+  // 🔹 Fungsi toggle manual dropdown barang
   const toggleDropdownBarang = () => {
     setShowDropdownBarang(!showDropdownBarang);
   };
 
-  // 🔹 Handle click outside untuk menutup dropdown
+  // 🔹 useEffect untuk menutup dropdown secara otomatis jika user klik di luar area input
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".dropdown-container-karyawan")) {
@@ -168,12 +166,12 @@ function TambahPeminjamanPengembalian() {
     };
   }, []);
 
-  // 🔹 Submit data ke backend dengan SweetAlert
+  // 🔹 Fungsi Submit data ke backend dengan validasi dan konfirmasi SweetAlert
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
-    // Validasi frontend
+    // Validasi input wajib di frontend
     if (
       !formData.id_karyawan ||
       !formData.id_inventaris ||
@@ -188,7 +186,7 @@ function TambahPeminjamanPengembalian() {
       return;
     }
 
-    // 🔹 KONFIRMASI SEBELUM SIMPAN
+    // 🔹 KONFIRMASI SEBELUM SIMPAN menggunakan SweetAlert
     const confirmResult = await Swal.fire({
       title: "Konfirmasi Simpan",
       text: "Apakah Anda yakin ingin menyimpan data peminjam ini?",
@@ -201,7 +199,7 @@ function TambahPeminjamanPengembalian() {
       reverseButtons: true,
     });
 
-    // Jika user membatalkan
+    // Batalkan proses jika user memilih 'Batal'
     if (!confirmResult.isConfirmed) {
       return;
     }
@@ -209,12 +207,13 @@ function TambahPeminjamanPengembalian() {
     setLoading(true);
 
     try {
+      // Menyiapkan payload untuk dikirim ke API
       const payload = {
         id_karyawan: parseInt(formData.id_karyawan),
         id_inventaris: parseInt(formData.id_inventaris),
         tanggal_peminjaman: formData.tanggal_peminjaman,
         notes: formData.notes || "",
-        status: formData.status, // 🔹 Kirim status ke backend
+        status: formData.status, // 🔹 Mengirim status default "Dipinjam"
       };
 
       console.log("📤 Payload yang dikirim:", payload);
@@ -222,7 +221,7 @@ function TambahPeminjamanPengembalian() {
       const response = await mockApi.post(`${BASE_URL}`, payload);
       console.log("✅ Response sukses:", response.data);
 
-      // 🔹 LANGSUNG REDIRECT KE HALAMAN UTAMA DENGAN STATE SUCCESS
+      // 🔹 Redirect ke halaman list dengan membawa state alert sukses
       navigate("/app/peminjaman-pengembalian", {
         state: {
           showSuccessAlert: true,
@@ -232,11 +231,12 @@ function TambahPeminjamanPengembalian() {
     } catch (error) {
       console.error("❌ Gagal simpan data:", error);
 
+      // Penanganan error response dari server (Validasi 422, Server Error 500, dll)
       if (error.response?.status === 422) {
         setErrors(error.response.data.errors);
         const errorMessages = error.response.data.errors;
 
-        // 🔹 Handle error spesifik untuk id_inventaris
+        // 🔹 Penanganan error spesifik inventaris (sudah dipinjam/invalid)
         if (errorMessages.id_inventaris) {
           if (
             errorMessages.id_inventaris[0].includes("invalid") ||
@@ -305,7 +305,8 @@ function TambahPeminjamanPengembalian() {
             <div className="section-info">
               <h3>Informasi Peminjaman</h3>
               <div className="form-grid">
-                {/* Nama Karyawan dengan Search */}
+                
+                {/* Bagian Input: Nama Karyawan dengan Search Dropdown */}
                 <div className="form-group dropdown-container-karyawan">
                   <label htmlFor="search_karyawan" className="required">
                     Nama Karyawan
@@ -331,6 +332,7 @@ function TambahPeminjamanPengembalian() {
                       />
                     </div>
                   </div>
+                  {/* Tampilan List Dropdown Karyawan */}
                   {showDropdownKaryawan && filteredKaryawan.length > 0 && (
                     <div className="dropdown-list">
                       {filteredKaryawan.map((k) => (
@@ -344,6 +346,7 @@ function TambahPeminjamanPengembalian() {
                       ))}
                     </div>
                   )}
+                  {/* Feedback jika pencarian karyawan tidak ada */}
                   {showDropdownKaryawan &&
                     filteredKaryawan.length === 0 &&
                     searchKaryawan && (
@@ -358,7 +361,7 @@ function TambahPeminjamanPengembalian() {
                   )}
                 </div>
 
-                {/* Nama Barang dengan Search - Hanya yang TERSEDIA dan KONDISI BAIK */}
+                {/* Bagian Input: Nama Barang dengan Search Dropdown */}
                 <div className="form-group dropdown-container-barang">
                   <label htmlFor="search_barang" className="required">
                     Nama Barang
@@ -384,6 +387,7 @@ function TambahPeminjamanPengembalian() {
                       />
                     </div>
                   </div>
+                  {/* Tampilan List Dropdown Barang (Hanya item yang difilter) */}
                   {showDropdownBarang && filteredBarang.length > 0 && (
                     <div className="dropdown-list">
                       {filteredBarang.map((inv) => {
@@ -402,6 +406,7 @@ function TambahPeminjamanPengembalian() {
                       })}
                     </div>
                   )}
+                  {/* Feedback jika pencarian barang tidak ada */}
                   {showDropdownBarang &&
                     filteredBarang.length === 0 &&
                     searchBarang && (
@@ -418,7 +423,7 @@ function TambahPeminjamanPengembalian() {
                   )}
                 </div>
 
-                {/* Tanggal Peminjaman */}
+                {/* Bagian Input: Tanggal Peminjaman */}
                 <div className="form-group">
                   <label htmlFor="tanggal_peminjaman" className="required">
                     Tanggal Peminjaman
@@ -439,7 +444,7 @@ function TambahPeminjamanPengembalian() {
                   )}
                 </div>
 
-                {/* Status - Default Dipinjam dan Disabled */}
+                {/* Bagian Input: Status (Read-only/Disabled) */}
                 <div className="form-group">
                   <label htmlFor="status" className="required">
                     Status
@@ -454,7 +459,7 @@ function TambahPeminjamanPengembalian() {
                   />
                 </div>
 
-                {/* Keterangan */}
+                {/* Bagian Input: Keterangan / Notes (Full Width) */}
                 <div className="form-group full-width">
                   <label htmlFor="notes">Keterangan</label>
                   <textarea
@@ -473,7 +478,7 @@ function TambahPeminjamanPengembalian() {
               </div>
             </div>
 
-            {/* 🔹 Tombol Aksi */}
+            {/* 🔹 Tombol Aksi: Batal dan Simpan */}
             <div className="form-actions">
               <button
                 type="button"

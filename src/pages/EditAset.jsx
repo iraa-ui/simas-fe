@@ -9,6 +9,7 @@ function EditAset() {
   const { id } = useParams();
   const API_URL = "/inventaris";
 
+  // State untuk menampung data input form
   const [formData, setFormData] = useState({
     foto: null,
     no_inventaris: "",
@@ -28,6 +29,7 @@ function EditAset() {
   const [currentStatus, setCurrentStatus] = useState("");
   const [originalData, setOriginalData] = useState({});
 
+  // List pilihan status barang
   const STATUS_OPTIONS = [
     "Tersedia",
     "Dipinjam",
@@ -39,31 +41,24 @@ function EditAset() {
     "Sudah Diperbaiki",
   ];
 
-  // 🔥 TAMBAHAN: Fungsi format harga dengan titik
+  // Fungsi untuk memformat angka menjadi ribuan dengan titik
   const formatHarga = (value) => {
-    // Hapus semua karakter non-digit
     const numericValue = value.replace(/\D/g, "");
-
     if (numericValue === "") return "";
-
-    // Format dengan titik sebagai pemisah ribuan
     return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  // Tambah state ini setelah state lainnya
   const [isEditFormValid, setIsEditFormValid] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // 🔥 GANTI EFFECT VALIDASI YANG SUDAH ADA dengan ini:
+  // Validasi tombol simpan: Aktif jika field wajib terisi DAN ada perubahan data
   useEffect(() => {
-    // Validasi field wajib terisi
     const isRequiredFieldsFilled =
       formData.nama_barang.trim() !== "" &&
       formData.tipe.trim() !== "" &&
       formData.kondisi.trim() !== "" &&
       formData.status.trim() !== "";
 
-    // Cek apakah ada perubahan dari data awal
     const isDataChanged =
       formData.nama_barang !== initialFormData.nama_barang ||
       formData.tipe !== initialFormData.tipe ||
@@ -72,23 +67,22 @@ function EditAset() {
       formData.harga !== initialFormData.harga ||
       formData.spesifikasi_barang !== initialFormData.spesifikasi_barang ||
       formData.keterangan !== initialFormData.keterangan ||
-      formData.foto !== null; // jika ada upload foto baru
+      formData.foto !== null; 
 
     setIsEditFormValid(isRequiredFieldsFilled && isDataChanged);
     setHasChanges(isDataChanged);
   }, [formData, initialFormData]);
 
-  // Ambil data aset by ID
+  // Mengambil data detail aset berdasarkan ID saat halaman dibuka
   useEffect(() => {
     mockApi
       .get(`${API_URL}/${id}`)
       .then((res) => {
         const data = res.data.data;
 
-        // 🔥 PERBAIKAN: Format harga untuk edit (gunakan fungsi format)
         let rawHarga = data.harga_for_edit || data.harga;
 
-        // Jika harga masih dalam format desimal (20000.00), konversi ke integer
+        // Bersihkan format desimal dari database jika ada
         if (
           rawHarga &&
           typeof rawHarga === "string" &&
@@ -97,7 +91,6 @@ function EditAset() {
           rawHarga = parseInt(rawHarga).toString();
         }
 
-        // Format harga dengan titik
         const formattedHarga = formatHarga(rawHarga?.toString() || "");
 
         const initialData = {
@@ -107,7 +100,7 @@ function EditAset() {
           tipe: data.tipe || "",
           kondisi: data.kondisi || "",
           status: data.status || "Tersedia",
-          harga: formattedHarga, // 🔥 SUDAH DIFORMAT: 20.000
+          harga: formattedHarga, 
           spesifikasi_barang: data.spesifikasi_barang || "",
           keterangan: data.keterangan || "",
         };
@@ -125,13 +118,14 @@ function EditAset() {
         setLoading(false);
       });
   }, [id]);
+
+  // Handle perubahan input (teks, file foto, dan harga)
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
     if (name === "foto") {
       const file = files[0];
       if (file) {
-        // Validasi tipe file
         const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
         if (!allowedTypes.includes(file.type)) {
           setErrors({
@@ -143,7 +137,6 @@ function EditAset() {
           return;
         }
 
-        // Validasi ukuran file
         if (file.size > 5 * 1024 * 1024) {
           setErrors({
             foto: "Ukuran file harus di bawah 5MB",
@@ -154,7 +147,6 @@ function EditAset() {
           return;
         }
 
-        // Jika validasi berhasil, clear errors dan set data
         setErrors((prev) => ({
           ...prev,
           foto: null,
@@ -170,26 +162,21 @@ function EditAset() {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
 
-    // Clear error ketika user mengubah input
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // 🔥 PERBAIKAN: Cek apakah field bisa diubah berdasarkan status
+  // Proteksi field: Beberapa field tidak boleh diedit jika barang sedang dipinjam/diperbaiki
   const isFieldEditable = (fieldName) => {
-    // Status yang TIDAK BISA diubah sama sekali
     const nonEditableStatuses = ["Permintaan Perbaikan", "Dalam Perbaikan"];
 
-    // Jika status termasuk yang tidak bisa diubah sama sekali
     if (nonEditableStatuses.includes(currentStatus)) {
       return false;
     }
 
-    // Status yang hanya bisa ubah STATUS saja
     const statusOnlyEditable = ["Dipinjam", "Belum Lunas", "Terjual"];
 
-    // Jika status termasuk yang hanya bisa ubah status saja
     if (statusOnlyEditable.includes(currentStatus) && fieldName !== "status") {
       return false;
     }
@@ -197,7 +184,7 @@ function EditAset() {
     return true;
   };
 
-  // 🔥 FUNGSI BARU: Dapatkan opsi status yang tersedia berdasarkan status saat ini
+  // Membatasi pilihan status agar alur perubahan status tetap logis
   const getAvailableStatusOptions = () => {
     switch (currentStatus) {
       case "Tersedia":
@@ -206,7 +193,6 @@ function EditAset() {
         return ["Tersedia", "Tidak Tersedia"];
       case "Permintaan Perbaikan":
       case "Dalam Perbaikan":
-        // 🔥 PERUBAHAN: Status tidak bisa diubah melalui inventaris jika dalam proses perbaikan
         return [currentStatus];
       case "Sudah Diperbaiki":
         return ["Dipinjam"];
@@ -219,20 +205,20 @@ function EditAset() {
     }
   };
 
-  // 🔥 FUNGSI BARU: Cek apakah field status bisa diubah
+  // Cek apakah dropdown status boleh diklik atau dikunci
   const isStatusEditable = () => {
     const nonEditableStatuses = [
       "Dipinjam",
-      "Belum Lunas",
+      "Bel_um Lunas",
       "Terjual",
-      "Permintaan Perbaikan", // 🔥 TAMBAHAN: Tidak bisa ubah status
-      "Dalam Perbaikan", // 🔥 TAMBAHAN: Tidak bisa ubah status
+      "Permintaan Perbaikan", 
+      "Dalam Perbaikan", 
     ];
     return !nonEditableStatuses.includes(currentStatus);
   };
 
+  // Proses pengiriman data ke server
   const handleSubmit = async () => {
-    // Validasi file size (double check)
     if (formData.foto && formData.foto.size > 5 * 1024 * 1024) {
       setErrors({
         foto: "Ukuran file harus di bawah 5MB",
@@ -241,7 +227,6 @@ function EditAset() {
       return;
     }
 
-    // Validasi file type (double check)
     if (formData.foto) {
       const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
       if (!allowedTypes.includes(formData.foto.type)) {
@@ -256,7 +241,7 @@ function EditAset() {
     try {
       setErrors({});
 
-      // Validasi untuk field yang tidak bisa diubah
+      // Pengecekan keamanan terakhir sebelum submit
       const nonEditableFields = [
         "no_inventaris",
         "nama_barang",
@@ -286,7 +271,6 @@ function EditAset() {
         return;
       }
 
-      // Konfirmasi edit
       const confirm = await Swal.fire({
         title: "Konfirmasi Perubahan",
         text: "Apakah Anda yakin ingin mengubah data aset ini?",
@@ -303,6 +287,7 @@ function EditAset() {
 
       setLoading(true);
 
+      // Siapkan data dalam format FormData untuk upload file
       const dataToSend = new FormData();
       Object.keys(formData).forEach((key) => {
         if (formData[key] !== null && formData[key] !== "") {
@@ -320,7 +305,6 @@ function EditAset() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Langsung redirect ke halaman master aset
       navigate("/app/master-aset?action=updated");
     } catch (err) {
       console.error("❌ ERROR:", err);
@@ -366,7 +350,7 @@ function EditAset() {
             <h2>Edit Aset</h2>
 
             <div className="form-grid">
-              {/* Foto Barang */}
+              {/* Bagian Input Foto */}
               <div className="form-group foto-group">
                 <label>
                   Foto Barang <span style={{ color: "red" }}>*</span>
@@ -404,6 +388,7 @@ function EditAset() {
                 )}
               </div>
 
+              {/* Input No Inventaris (Read-only) */}
               <div className="form-group">
                 <label>
                   No Inventaris <span style={{ color: "red" }}>*</span>
@@ -413,16 +398,11 @@ function EditAset() {
                   name="no_inventaris"
                   value={formData.no_inventaris}
                   onChange={handleChange}
-                  disabled={true} // 🔥 SELALU DISABLE
+                  disabled={true} 
                 />
-                {!isFieldEditable("no_inventaris") && (
-                  <small className="input-hint">
-                    No Inventaris tidak dapat diubah untuk status{" "}
-                    {currentStatus}
-                  </small>
-                )}
               </div>
 
+              {/* Input Nama Barang */}
               <div className="form-group">
                 <label>
                   Nama Barang <span style={{ color: "red" }}>*</span>
@@ -441,6 +421,7 @@ function EditAset() {
                 )}
               </div>
 
+              {/* Input Tipe */}
               <div className="form-group">
                 <label>
                   Tipe <span style={{ color: "red" }}>*</span>
@@ -459,6 +440,7 @@ function EditAset() {
                 )}
               </div>
 
+              {/* Pilih Kondisi */}
               <div className="form-group">
                 <label>
                   Kondisi <span style={{ color: "red" }}>*</span>
@@ -477,13 +459,9 @@ function EditAset() {
                 {errors.kondisi && (
                   <span className="error-message">{errors.kondisi}</span>
                 )}
-                {!isFieldEditable("kondisi") && (
-                  <small className="input-hint">
-                    Kondisi tidak dapat diubah untuk status {currentStatus}
-                  </small>
-                )}
               </div>
 
+              {/* Pilih Status (Terfilter berdasarkan currentStatus) */}
               <div className="form-group">
                 <label>
                   Status <span style={{ color: "red" }}>*</span>
@@ -510,33 +488,9 @@ function EditAset() {
                     Status {currentStatus} tidak dapat diubah
                   </small>
                 )}
-                {currentStatus === "Permintaan Perbaikan" && (
-                  <small className="input-hint">
-                    Hanya bisa diubah ke status Dalam Perbaikan
-                  </small>
-                )}
-                {currentStatus === "Dalam Perbaikan" && (
-                  <small className="input-hint">
-                    Hanya bisa diubah ke status Sudah Diperbaiki
-                  </small>
-                )}
-                {currentStatus === "Sudah Diperbaiki" && (
-                  <small className="input-hint">
-                    Status akan berubah menjadi Dipinjam di tabel
-                  </small>
-                )}
-                {currentStatus === "Tersedia" && (
-                  <small className="input-hint">
-                    Hanya bisa diubah ke status Tidak Tersedia
-                  </small>
-                )}
-                {currentStatus === "Tidak Tersedia" && (
-                  <small className="input-hint">
-                    Bisa diubah kembali ke status Tersedia
-                  </small>
-                )}
               </div>
 
+              {/* Input Harga */}
               <div className="form-group">
                 <label>Harga</label>
                 <input
@@ -547,17 +501,12 @@ function EditAset() {
                   disabled={!isFieldEditable("harga")}
                   placeholder="Contoh: 2.000.000"
                 />
-                {!isFieldEditable("harga") && (
-                  <small className="input-hint">
-                    Harga tidak dapat diubah untuk status {currentStatus}
-                  </small>
-                )}
-                {/* 🔥 TAMBAHAN: Hint untuk format harga */}
                 <small className="input-hint" style={{ color: "#28a745" }}>
                   Format otomatis: 2000000 → 2.000.000
                 </small>
               </div>
 
+              {/* Input Spesifikasi */}
               <div className="form-group full-width">
                 <label>Spesifikasi</label>
                 <textarea
@@ -567,13 +516,9 @@ function EditAset() {
                   rows="2"
                   disabled={!isFieldEditable("spesifikasi_barang")}
                 />
-                {!isFieldEditable("spesifikasi_barang") && (
-                  <small className="input-hint">
-                    Spesifikasi tidak dapat diubah untuk status {currentStatus}
-                  </small>
-                )}
               </div>
 
+              {/* Input Keterangan */}
               <div className="form-group full-width">
                 <label>Keterangan</label>
                 <textarea
@@ -583,14 +528,10 @@ function EditAset() {
                   rows="2"
                   disabled={!isFieldEditable("keterangan")}
                 />
-                {!isFieldEditable("keterangan") && (
-                  <small className="input-hint">
-                    Keterangan tidak dapat diubah untuk status {currentStatus}
-                  </small>
-                )}
               </div>
             </div>
 
+            {/* Navigasi Action Form */}
             <div className="form-actions">
               <button
                 type="button"

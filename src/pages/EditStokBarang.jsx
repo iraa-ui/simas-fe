@@ -12,37 +12,42 @@ import "../styles/TambahEditStokBarang.css";
 import Swal from "sweetalert2";
 
 function EditStokBarang() {
+  // Inisialisasi URL API dan Hooks untuk Navigasi serta Parameter URL (ID Barang)
   const API_URL = "/stok_barang";
   const navigate = useNavigate();
   const { id } = useParams();
 
+  // State untuk menyimpan data formulir input
   const [formData, setFormData] = useState({
     nama_barang: "",
     kuantitas: "",
     kategori: "",
     harga_satuan: "",
-    tanggal_transaksi: new Date().toISOString().split("T")[0],
+    tanggal_transaksi: new Date().toISOString().split("T")[0], // Default tanggal hari ini
     dibayar_oleh: "",
     notes: "",
-    tipe: "",
+    tipe: "", // 'masuk' atau 'keluar'
     jumlah_transaksi: "",
   });
 
+  // State pendukung untuk pembandingan data, error handling, dan status loading
   const [originalData, setOriginalData] = useState({});
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
 
-  // AUTO CALCULATE: Kuantitas setelah transaksi
+  // State untuk menghitung secara otomatis sisa/total stok setelah transaksi
   const [kuantitasSetelah, setKuantitasSetelah] = useState(0);
 
+  // State untuk mendeteksi apakah ada perubahan pada form dibanding data awal
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Tambahkan fungsi ini di dalam component EditStokBarang
+  // Handler untuk menonaktifkan perubahan angka melalui scroll mouse pada input number
   const handleWheel = (e) => {
-    e.target.blur(); // 🔥 Nonaktifkan scroll wheel behavior
+    e.target.blur(); 
   };
 
+  // Effect untuk mengambil data awal barang dari API saat komponen pertama kali dimuat
   useEffect(() => {
     const fetchStockData = async () => {
       try {
@@ -52,6 +57,7 @@ function EditStokBarang() {
 
         console.log("Data received from API:", stockData);
 
+        // Mengisi form dengan data yang didapat dari API
         setFormData({
           nama_barang: stockData.nama_barang || "",
           kuantitas: stockData.total || stockData.kuantitas || "0",
@@ -79,7 +85,7 @@ function EditStokBarang() {
     fetchStockData();
   }, [id, navigate]);
 
-  // REAL-TIME CALCULATION: Update kuantitas setelah
+  // Effect untuk kalkulasi real-time stok akhir (Stok Saat Ini +/- Jumlah Transaksi)
   useEffect(() => {
     const stokSaatIni = parseInt(formData.kuantitas) || 0;
     const jumlahBaru = parseInt(formData.jumlah_transaksi) || 0;
@@ -95,6 +101,7 @@ function EditStokBarang() {
     setKuantitasSetelah(kuantitasBaru);
   }, [formData.tipe, formData.jumlah_transaksi, formData.kuantitas]);
 
+  // Fungsi untuk mengecek apakah user telah melakukan perubahan pada field tertentu
   const checkForChanges = () => {
     const hasFormChanges =
       formData.tipe !== "" ||
@@ -106,6 +113,7 @@ function EditStokBarang() {
     setHasChanges(hasFormChanges);
   };
 
+  // Handler untuk mengupdate state formData setiap kali input berubah
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -114,7 +122,7 @@ function EditStokBarang() {
       [name]: value,
     }));
 
-    // Clear error ketika user mulai mengetik
+    // Menghapus pesan error pada field yang sedang diketik oleh user
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -123,26 +131,29 @@ function EditStokBarang() {
     }
   };
 
+  // Trigger pengecekan perubahan setiap kali formData berubah
   useEffect(() => {
     checkForChanges();
   }, [formData]);
 
+  // Fungsi validasi form sebelum dikirim ke server
   const validateForm = () => {
     const newErrors = {};
     const stokSaatIni = parseInt(formData.kuantitas) || 0;
     const jumlahBaru = parseInt(formData.jumlah_transaksi) || 0;
 
-    // VALIDASI: Tipe transaksi wajib
+    // Validasi: Pastikan tipe transaksi dipilih
     if (!formData.tipe) {
       newErrors.tipe = "Tipe transaksi wajib dipilih";
     }
 
-    // VALIDASI: Jumlah transaksi wajib
+    // Validasi: Pastikan jumlah transaksi lebih dari 0
     if (!formData.jumlah_transaksi || formData.jumlah_transaksi <= 0) {
       newErrors.jumlah_transaksi =
         "Jumlah transaksi wajib diisi dan harus lebih dari 0";
     }
 
+    // Validasi: Cegah stok keluar melebihi stok yang tersedia
     if (formData.tipe === "keluar" && jumlahBaru > stokSaatIni) {
       newErrors.jumlah_transaksi = `Stok tidak cukup! Stok tersedia: ${stokSaatIni} unit`;
     }
@@ -159,12 +170,11 @@ function EditStokBarang() {
     return Object.keys(newErrors).length === 0;
   };
 
-  //  FUNGSI BARU: Cek apakah form sudah valid dan bisa disubmit
+  // Fungsi pengecekan kelayakan form (untuk mengaktifkan/menonaktifkan tombol submit)
   const isFormValid = () => {
     const stokSaatIni = parseInt(formData.kuantitas) || 0;
     const jumlahBaru = parseInt(formData.jumlah_transaksi) || 0;
 
-    // Cek field wajib
     if (
       !formData.tipe ||
       !formData.jumlah_transaksi ||
@@ -175,12 +185,10 @@ function EditStokBarang() {
       return false;
     }
 
-    // Cek validasi khusus untuk barang keluar
     if (formData.tipe === "keluar" && jumlahBaru > stokSaatIni) {
       return false;
     }
 
-    // Cek apakah ada perubahan data
     if (!hasChanges) {
       return false;
     }
@@ -188,11 +196,13 @@ function EditStokBarang() {
     return true;
   };
 
+  // Fungsi utama untuk menangani pengiriman data (submit)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
+    // Tampilkan konfirmasi menggunakan SweetAlert2
     const confirmResult = await Swal.fire({
       title: "Update Transaksi?",
       text: "Apakah Anda yakin ingin memperbarui transaksi stok barang ini?",
@@ -205,12 +215,13 @@ function EditStokBarang() {
     });
 
     if (!confirmResult.isConfirmed) {
-      return; // 🔥 BATALKAN JIKA USER TIDAK KONFIRM
+      return; 
     }
 
     setLoading(true);
 
     try {
+      // Menyiapkan data yang akan dikirim ke API
       const payload = {
         nama_barang: formData.nama_barang.trim(),
         kuantitas: kuantitasSetelah,
@@ -223,21 +234,16 @@ function EditStokBarang() {
       };
 
       console.log("Payload yang dikirim:", payload);
-      console.log("Data original:", originalData);
-
       const response = await mockApi.put(`${API_URL}/${id}`, payload);
 
       console.log("Response success:", response.data);
 
-      // Navigate dengan parameter untuk trigger auto-sort di list
+      // Navigasi kembali ke daftar stok dengan parameter sukses
       navigate("/app/stokbarang?action=updated&itemId=" + id);
     } catch (error) {
       console.error("Error updating stock:", error);
-
+      // Handling error berdasarkan status code dari server
       if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-
         if (error.response.status === 422) {
           const validationErrors = error.response.data.errors;
           if (validationErrors) {
@@ -247,13 +253,8 @@ function EditStokBarang() {
             });
             alert(errorMessage);
           }
-        } else if (error.response.status === 400) {
-          alert(error.response.data.message);
         } else {
-          alert(
-            "Gagal mengupdate stock: " +
-              (error.response.data.message || "Error tidak diketahui")
-          );
+          alert("Gagal mengupdate stock: " + (error.response.data.message || "Error tidak diketahui"));
         }
       } else {
         alert("Network error: Tidak dapat terhubung ke server");
@@ -267,6 +268,7 @@ function EditStokBarang() {
     navigate("/app/stokbarang");
   };
 
+  // Opsi pilihan untuk dropdown Kategori dan Tipe
   const kategoriOptions = [
     { value: "", label: "Pilih Kategori" },
     { value: "ATK", label: "ATK" },
@@ -283,19 +285,19 @@ function EditStokBarang() {
     { value: "keluar", label: "Barang Keluar" },
   ];
 
-  // Get class untuk input jumlah berdasarkan validasi
+  // Helper untuk menentukan class CSS input jumlah (misal: jadi merah jika error/stok kurang)
   const getJumlahInputClass = () => {
     const stokSaatIni = parseInt(formData.kuantitas) || 0;
     const jumlahBaru = parseInt(formData.jumlah_transaksi) || 0;
 
     if (formData.tipe === "keluar" && jumlahBaru > stokSaatIni) {
-      return "error-input warning-red"; // Class khusus untuk warning merah
+      return "error-input warning-red"; 
     }
 
     return errors.jumlah_transaksi ? "error-input" : "";
   };
 
-  // Format currency untuk display (tanpa .00)
+  // Helper untuk memformat angka ke format mata uang Rupiah (IDR)
   const formatCurrencyDisplay = (amount) => {
     if (!amount) return "0";
     return new Intl.NumberFormat("id-ID").format(amount);
@@ -318,7 +320,7 @@ function EditStokBarang() {
             </div>
 
             <form onSubmit={handleSubmit}>
-              {/* SECTION 1: DATA LAMA (READ-ONLY) */}
+              {/* SECTION 1: DATA LAMA (Hanya untuk dibaca/Read-Only) */}
               <div className="section-info">
                 <h3>Data Barang Saat Ini</h3>
                 <div className="form-grid">
@@ -349,11 +351,7 @@ function EditStokBarang() {
                     <div className="input-with-prefix">
                       <input
                         type="text"
-                        value={
-                          formData.harga_satuan
-                            ? formatCurrencyDisplay(formData.harga_satuan)
-                            : ""
-                        }
+                        value={formData.harga_satuan ? formatCurrencyDisplay(formData.harga_satuan) : ""}
                         readOnly
                         className="readonly-input"
                       />
@@ -374,14 +372,12 @@ function EditStokBarang() {
                 </div>
               </div>
 
-              {/* SECTION 2: TRANSAKSI BARU */}
+              {/* SECTION 2: INPUT TRANSAKSI BARU (Logika tambah/kurang stok) */}
               <div className="section-info">
                 <h3>Transaksi Baru</h3>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label htmlFor="tipe" className="required">
-                      Tipe Transaksi
-                    </label>
+                    <label htmlFor="tipe" className="required">Tipe Transaksi</label>
                     <select
                       id="tipe"
                       name="tipe"
@@ -396,51 +392,24 @@ function EditStokBarang() {
                         </option>
                       ))}
                     </select>
-                    {errors.tipe && (
-                      <span className="error-text">{errors.tipe}</span>
-                    )}
-                    <span className="input-hint">
-                      Pilih jenis transaksi yang akan dilakukan
-                    </span>
+                    {errors.tipe && <span className="error-text">{errors.tipe}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="jumlah_transaksi" className="required">
-                      Jumlah
-                    </label>
+                    <label htmlFor="jumlah_transaksi" className="required">Jumlah</label>
                     <input
                       type="number"
                       id="jumlah_transaksi"
                       name="jumlah_transaksi"
                       value={formData.jumlah_transaksi}
                       onChange={handleChange}
-                      onWheel={handleWheel} // 🔥 TAMBAHKAN INI
+                      onWheel={handleWheel}
                       className={getJumlahInputClass()}
                       placeholder="0"
                       min="1"
                       disabled={loading || !formData.tipe}
                     />
-                    {errors.jumlah_transaksi && (
-                      <span className="error-text">
-                        {errors.jumlah_transaksi}
-                      </span>
-                    )}
-                    <span className="input-hint">
-                      {!formData.tipe ? (
-                        <>
-                          <FaExclamationTriangle
-                            style={{ color: "#ffc107", marginRight: "4px" }}
-                          />
-                          Pilih tipe transaksi terlebih dahulu
-                        </>
-                      ) : (
-                        `Jumlah unit yang akan ${
-                          formData.tipe === "masuk"
-                            ? "ditambahkan"
-                            : "dikeluarkan"
-                        }`
-                      )}
-                    </span>
+                    {errors.jumlah_transaksi && <span className="error-text">{errors.jumlah_transaksi}</span>}
                   </div>
 
                   <div className="form-group">
@@ -450,58 +419,25 @@ function EditStokBarang() {
                       value={kuantitasSetelah}
                       readOnly
                       className={`readonly-input ${
-                        formData.tipe === "keluar" && kuantitasSetelah < 0
-                          ? "warning-red"
-                          : formData.tipe === "keluar" &&
-                            kuantitasSetelah <
-                              parseInt(formData.kuantitas) * 0.2
-                          ? "warning-input"
-                          : ""
+                        formData.tipe === "keluar" && kuantitasSetelah < 0 ? "warning-red" : ""
                       }`}
                     />
                     <span className="input-hint">
                       <FaCalculator style={{ marginRight: "5px" }} />
                       {formData.tipe && formData.jumlah_transaksi
-                        ? `Akan ${
-                            formData.tipe === "masuk"
-                              ? "bertambah"
-                              : "berkurang"
-                          } menjadi ${kuantitasSetelah} unit`
-                        : "Hasil perhitungan akan muncul di sini"}
-                      {formData.tipe === "keluar" && kuantitasSetelah < 0 && (
-                        <>
-                          <br />
-                          <FaExclamationTriangle
-                            style={{ color: "#e74c3c", marginRight: "4px" }}
-                          />
-                          Stok minus! Tidak dapat diproses
-                        </>
-                      )}
-                      {formData.tipe === "keluar" &&
-                        kuantitasSetelah >= 0 &&
-                        kuantitasSetelah <
-                          parseInt(formData.kuantitas) * 0.2 && (
-                          <>
-                            <br />
-                            <FaExclamationTriangle
-                              style={{ color: "#ffc107", marginRight: "4px" }}
-                            />
-                            Stok hampir habis!
-                          </>
-                        )}
+                        ? `Akan ${formData.tipe === "masuk" ? "bertambah" : "berkurang"} menjadi ${kuantitasSetelah} unit`
+                        : "Hasil perhitungan otomatis"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* SECTION 3: INFORMASI TRANSAKSI */}
+              {/* SECTION 3: DETAIL INFORMASI (Tanggal & Penanggung Jawab) */}
               <div className="section-info">
                 <h3>Informasi Transaksi</h3>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label htmlFor="tanggal_transaksi" className="required">
-                      Tanggal Transaksi
-                    </label>
+                    <label htmlFor="tanggal_transaksi" className="required">Tanggal Transaksi</label>
                     <input
                       type="date"
                       id="tanggal_transaksi"
@@ -511,18 +447,10 @@ function EditStokBarang() {
                       className={errors.tanggal_transaksi ? "error-input" : ""}
                       disabled={loading}
                     />
-                    {errors.tanggal_transaksi && (
-                      <span className="error-text">
-                        {errors.tanggal_transaksi}
-                      </span>
-                    )}
-                    <span className="input-hint">Tanggal transaksi ini</span>
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="dibayar_oleh" className="required">
-                      Dibayar Oleh
-                    </label>
+                    <label htmlFor="dibayar_oleh" className="required">Dibayar Oleh</label>
                     <input
                       type="text"
                       id="dibayar_oleh"
@@ -533,15 +461,11 @@ function EditStokBarang() {
                       placeholder="Nama pembayar / departemen"
                       disabled={loading}
                     />
-                    {errors.dibayar_oleh && (
-                      <span className="error-text">{errors.dibayar_oleh}</span>
-                    )}
-                    <span className="input-hint">Nama individu/Departemen</span>
                   </div>
                 </div>
               </div>
 
-              {/* SECTION 4: KETERANGAN TAMBAHAN */}
+              {/* SECTION 4: CATATAN TAMBAHAN */}
               <div className="section-info">
                 <h3>Keterangan Tambahan</h3>
                 <div className="form-grid">
@@ -556,15 +480,11 @@ function EditStokBarang() {
                       placeholder="Masukkan deskripsi transaksi (opsional)"
                       disabled={loading}
                     />
-                    <span className="input-hint">
-                      Contoh: Tambahan dari supplier, untuk event, pemakaian
-                      internal, dll.
-                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* ACTION BUTTONS */}
+              {/* TOMBOL AKSI: Batal atau Simpan */}
               <div className="form-actions">
                 <button
                   type="button"

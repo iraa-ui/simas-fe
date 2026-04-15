@@ -6,23 +6,25 @@ import Swal from "sweetalert2";
 import "../styles/EditTambahKendalaBarang.css";
 
 function TambahKendalaBarang() {
+  // --- KONSTANTA API URL ---
   const API_URL = "/kendala-barang";
   const KARYAWAN_API_URL = "/karyawans";
-  const PEMINJAMAN_API_URL =
-    "/pinjamkembalis";
-  const INVENTARIS_API_URL =
-    "/inventaris";
+  const PEMINJAMAN_API_URL = "/pinjamkembalis";
+  const INVENTARIS_API_URL = "/inventaris";
 
   const navigate = useNavigate();
 
+  // --- STATE MANAGEMENT ---
+  // State untuk data utama form kendala
   const [formData, setFormData] = useState({
     id_karyawan: "",
     id_inventaris: "",
     deskripsi_kendala: "",
-    tanggal_kendala: new Date().toISOString().split("T")[0],
+    tanggal_kendala: new Date().toISOString().split("T")[0], // Default ke tanggal hari ini
     status: "Open",
   });
 
+  // State untuk error, loading, dan data master dari API
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [karyawanList, setKaryawanList] = useState([]);
@@ -30,22 +32,25 @@ function TambahKendalaBarang() {
   const [karyawanLoading, setKaryawanLoading] = useState(true);
   const [inventarisLoading, setInventarisLoading] = useState(false);
 
-  // State untuk search dan dropdown
+  // State untuk manajemen pencarian dan tampilan dropdown custom
   const [searchKaryawan, setSearchKaryawan] = useState("");
   const [searchBarang, setSearchBarang] = useState("");
   const [showDropdownKaryawan, setShowDropdownKaryawan] = useState(false);
   const [showDropdownBarang, setShowDropdownBarang] = useState(false);
 
+  // Mengambil data awal saat komponen dimuat
   useEffect(() => {
     fetchKaryawanWithBarangDipinjam();
   }, []);
 
-  // 🔹 FUNGSI BARU: Ambil data karyawan yang memiliki barang dipinjam
+  // --- LOGIKA FETCHING DATA ---
+
+  // 🔹 Ambil data karyawan yang tercatat sedang meminjam barang (status: "Dipinjam")
   const fetchKaryawanWithBarangDipinjam = async () => {
     setKaryawanLoading(true);
 
     try {
-      // Ambil data peminjaman dulu
+      // 1. Ambil data transaksi peminjaman
       const peminjamanResponse = await mockApi.get(PEMINJAMAN_API_URL);
       console.log("📦 Data peminjaman:", peminjamanResponse.data);
 
@@ -58,7 +63,7 @@ function TambahKendalaBarang() {
         dataPeminjaman = peminjamanResponse.data.data;
       }
 
-      // Filter hanya yang status "Dipinjam"
+      // 2. Filter hanya transaksi yang statusnya masih "Dipinjam"
       const barangDipinjam = dataPeminjaman.filter(
         (peminjaman) =>
           peminjaman && peminjaman.status?.toString().trim() === "Dipinjam"
@@ -66,13 +71,13 @@ function TambahKendalaBarang() {
 
       console.log("📦 Barang yang sedang dipinjam:", barangDipinjam);
 
-      // Ambil daftar karyawan unik yang memiliki barang dipinjam
+      // 3. Ambil daftar nama karyawan unik dari hasil filter peminjaman
       const karyawanUnik = [
         ...new Set(barangDipinjam.map((p) => p.nama_karyawan)),
       ];
       console.log("👥 Karyawan dengan barang dipinjam:", karyawanUnik);
 
-      // Sekarang ambil data lengkap karyawan
+      // 4. Ambil data detail karyawan dari API Karyawan
       const karyawanResponse = await mockApi.get(KARYAWAN_API_URL);
       console.log("👥 Semua data karyawan:", karyawanResponse.data);
 
@@ -85,15 +90,12 @@ function TambahKendalaBarang() {
         semuaKaryawan = karyawanResponse.data;
       }
 
-      // Filter karyawan yang memiliki barang dipinjam
+      // 5. Filter data lengkap karyawan yang namanya ada di daftar peminjam barang
       const karyawanFiltered = semuaKaryawan.filter((karyawan) =>
         karyawanUnik.includes(karyawan.nama)
       );
 
-      console.log(
-        "✅ Karyawan dengan barang dipinjam (lengkap):",
-        karyawanFiltered
-      );
+      console.log("✅ Karyawan dengan barang dipinjam (lengkap):", karyawanFiltered);
       setKaryawanList(karyawanFiltered);
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -103,7 +105,7 @@ function TambahKendalaBarang() {
     }
   };
 
-  // 🔹 FUNGSI YANG DIPERBAIKI: Mengambil barang yang dipinjam oleh karyawan tertentu
+  // 🔹 Ambil daftar barang yang dipinjam oleh karyawan tertentu yang dipilih
   const fetchBarangDipinjamByKaryawan = async (idKaryawan, namaKaryawan) => {
     if (!idKaryawan || !namaKaryawan) {
       setInventarisList([]);
@@ -114,11 +116,9 @@ function TambahKendalaBarang() {
 
     setInventarisLoading(true);
     try {
-      console.log(
-        `📦 Fetching barang untuk: ${namaKaryawan} (ID: ${idKaryawan})`
-      );
+      console.log(`📦 Fetching barang untuk: ${namaKaryawan} (ID: ${idKaryawan})`);
 
-      // Ambil semua data peminjaman
+      // 1. Ambil semua data peminjaman
       const response = await mockApi.get(PEMINJAMAN_API_URL);
       let dataPeminjaman = [];
 
@@ -130,77 +130,47 @@ function TambahKendalaBarang() {
         dataPeminjaman = response.data.data;
       }
 
-      console.log("📦 Semua data peminjaman:", dataPeminjaman);
-
-      // 🔹 PERBAIKAN: Filter barang yang dipinjam oleh karyawan ini
+      // 2. Filter peminjaman berdasarkan status "Dipinjam" dan Nama Karyawan terpilih
       const barangDipinjam = dataPeminjaman.filter((peminjaman) => {
         if (!peminjaman) return false;
-
         const status = peminjaman.status?.toString().trim();
-        const namaKaryawanPeminjaman = peminjaman.nama_karyawan
-          ?.toString()
-          .trim();
-
-        console.log(
-          `🔍 Checking: ${namaKaryawanPeminjaman} vs ${namaKaryawan}, Status: ${status}`
-        );
-
+        const namaKaryawanPeminjaman = peminjaman.nama_karyawan?.toString().trim();
         return status === "Dipinjam" && namaKaryawanPeminjaman === namaKaryawan;
       });
 
-      console.log(`📦 Barang dipinjam oleh ${namaKaryawan}:`, barangDipinjam);
-
       if (barangDipinjam.length === 0) {
         setInventarisList([]);
-        console.warn(`⚠️ Tidak ada barang yang dipinjam oleh ${namaKaryawan}`);
         return;
       }
 
-      // Ambil semua data inventaris untuk mapping
+      // 3. Ambil data master inventaris untuk mendapatkan ID asli barang (untuk kebutuhan payload kendala)
       const inventarisResponse = await mockApi.get(INVENTARIS_API_URL);
       const allInventaris = inventarisResponse.data.data || [];
-      console.log("📦 Semua data inventaris:", allInventaris);
 
-      // Mapping data barang dipinjam dengan data inventaris
+      // 4. Gabungkan (mapping) data peminjaman dengan ID dari master inventaris
       const inventarisWithDetails = barangDipinjam
         .map((peminjaman) => {
-          // Cari inventaris dengan nama barang yang sama
           const inventarisDetail = allInventaris.find(
             (inv) =>
               inv.nama_barang?.toString().trim().toLowerCase() ===
               peminjaman.nama_barang?.toString().trim().toLowerCase()
           );
 
-          console.log(
-            `🔍 Mapping: ${peminjaman.nama_barang} ->`,
-            inventarisDetail
-          );
-
-          if (!inventarisDetail) {
-            console.warn(
-              `⚠️ Inventaris tidak ditemukan untuk: ${peminjaman.nama_barang}`
-            );
-            return null;
-          }
+          if (!inventarisDetail) return null;
 
           return {
             id_inventaris: inventarisDetail.id_inventaris,
             nama_barang: peminjaman.nama_barang,
-            id: inventarisDetail.id_inventaris, // Use id_inventaris as ID
+            id: inventarisDetail.id_inventaris, 
             id_peminjaman: peminjaman.id_peminjaman,
             nama_karyawan: peminjaman.nama_karyawan,
             status: peminjaman.status,
             tanggal_peminjaman: peminjaman.tanggal_peminjaman,
-            // Include inventaris detail for debugging
             inventaris_detail: inventarisDetail,
           };
         })
         .filter((item) => item !== null);
 
-      console.log(
-        "📦 Data barang akhir untuk dropdown:",
-        inventarisWithDetails
-      );
       setInventarisList(inventarisWithDetails);
     } catch (err) {
       console.error("❌ Error fetching barang dipinjam:", err);
@@ -210,33 +180,36 @@ function TambahKendalaBarang() {
     }
   };
 
-  // 🔹 Filter data karyawan berdasarkan search
+  // --- LOGIKA FILTER PADA DROPDOWN (SEARCH) ---
+
+  // Filter karyawan berdasarkan teks pencarian
   const filteredKaryawan = karyawanList.filter((karyawan) =>
     karyawan.nama?.toLowerCase().includes(searchKaryawan.toLowerCase())
   );
 
-  // 🔹 Filter data barang berdasarkan search
+  // Filter barang berdasarkan teks pencarian
   const filteredBarang = inventarisList.filter((barang) =>
     barang.nama_barang?.toLowerCase().includes(searchBarang.toLowerCase())
   );
 
-  // 🔹 Handle select karyawan dari dropdown custom
+  // --- EVENT HANDLERS ---
+
+  // Handler saat memilih karyawan dari list dropdown
   const handleSelectKaryawan = async (id, nama) => {
     setFormData((prev) => ({
       ...prev,
       id_karyawan: id,
-      id_inventaris: "", // Reset barang ketika ganti karyawan
+      id_inventaris: "", // Reset barang pilihan sebelumnya
     }));
     setSearchKaryawan(nama);
     setShowDropdownKaryawan(false);
-    setSearchBarang(""); // Reset search barang
+    setSearchBarang(""); 
 
-    // Clear error
     if (errors.id_karyawan) {
       setErrors((prev) => ({ ...prev, id_karyawan: "" }));
     }
 
-    // Fetch barang yang dipinjam oleh karyawan ini
+    // Trigger pengambilan barang yang sedang dipinjam oleh karyawan terpilih
     if (id && nama) {
       await fetchBarangDipinjamByKaryawan(id, nama);
     } else {
@@ -244,19 +217,18 @@ function TambahKendalaBarang() {
     }
   };
 
-  // 🔹 Handle select barang dari dropdown custom
+  // Handler saat memilih barang dari list dropdown
   const handleSelectBarang = (id, namaBarang) => {
     setFormData((prev) => ({ ...prev, id_inventaris: id }));
     setSearchBarang(namaBarang);
     setShowDropdownBarang(false);
 
-    // Clear error
     if (errors.id_inventaris) {
       setErrors((prev) => ({ ...prev, id_inventaris: "" }));
     }
   };
 
-  // 🔹 Handle search input change untuk karyawan
+  // Handler input pencarian karyawan
   const handleSearchKaryawanChange = (e) => {
     setSearchKaryawan(e.target.value);
     setShowDropdownKaryawan(true);
@@ -267,7 +239,7 @@ function TambahKendalaBarang() {
     }
   };
 
-  // 🔹 Handle search input change untuk barang
+  // Handler input pencarian barang
   const handleSearchBarangChange = (e) => {
     setSearchBarang(e.target.value);
     setShowDropdownBarang(true);
@@ -276,17 +248,11 @@ function TambahKendalaBarang() {
     }
   };
 
-  // 🔹 Toggle dropdown untuk karyawan
-  const toggleDropdownKaryawan = () => {
-    setShowDropdownKaryawan(!showDropdownKaryawan);
-  };
+  // Toggle tampilan dropdown
+  const toggleDropdownKaryawan = () => setShowDropdownKaryawan(!showDropdownKaryawan);
+  const toggleDropdownBarang = () => setShowDropdownBarang(!showDropdownBarang);
 
-  // 🔹 Toggle dropdown untuk barang
-  const toggleDropdownBarang = () => {
-    setShowDropdownBarang(!showDropdownBarang);
-  };
-
-  // 🔹 Handle click outside untuk menutup dropdown
+  // Menutup dropdown jika user klik di luar area input/dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".dropdown-container-karyawan")) {
@@ -296,55 +262,33 @@ function TambahKendalaBarang() {
         setShowDropdownBarang(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 🔹 Handle perubahan field lainnya
+  // Handler perubahan input text/date/select standar
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear error
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // 🔹 Validasi sebelum submit
+  // --- VALIDASI FORM ---
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.id_karyawan) {
-      newErrors.id_karyawan = ["Nama karyawan wajib dipilih"];
-    }
-
-    if (!formData.id_inventaris) {
-      newErrors.id_inventaris = ["Nama barang wajib dipilih"];
-    }
-
-    if (!formData.tanggal_kendala) {
-      newErrors.tanggal_kendala = ["Tanggal kendala wajib diisi"];
-    }
-
+    if (!formData.id_karyawan) newErrors.id_karyawan = ["Nama karyawan wajib dipilih"];
+    if (!formData.id_inventaris) newErrors.id_inventaris = ["Nama barang wajib dipilih"];
+    if (!formData.tanggal_kendala) newErrors.tanggal_kendala = ["Tanggal kendala wajib diisi"];
     return newErrors;
   };
 
-  // 🔹 Submit data ke backend
+  // --- SUBMIT PROCESS ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
-    // Validasi frontend
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
@@ -358,7 +302,7 @@ function TambahKendalaBarang() {
       return;
     }
 
-    // 🔹 KONFIRMASI SEBELUM SIMPAN
+    // Modal Konfirmasi sebelum aksi kirim
     const confirmResult = await Swal.fire({
       title: "Konfirmasi Simpan",
       text: "Apakah Anda yakin ingin menyimpan data kendala ini?",
@@ -371,26 +315,23 @@ function TambahKendalaBarang() {
       reverseButtons: true,
     });
 
-    if (!confirmResult.isConfirmed) {
-      return;
-    }
+    if (!confirmResult.isConfirmed) return;
 
     setLoading(true);
 
     try {
+      // Pembentukan Payload sesuai kebutuhan backend
       const payload = {
         id_karyawan: parseInt(formData.id_karyawan),
         id_inventaris: parseInt(formData.id_inventaris),
         deskripsi_kendala: formData.deskripsi_kendala || "",
         tanggal_kendala: formData.tanggal_kendala,
-        status: "Open",
+        status: "Open", // Default awal kendala
       };
 
-      console.log("📤 Payload yang dikirim:", payload);
+      await mockApi.post(API_URL, payload);
 
-      const response = await mockApi.post(API_URL, payload);
-      console.log("✅ Response sukses:", response.data);
-
+      // Kembali ke list dengan membawa status sukses untuk SweetAlert
       navigate("/app/kendala-barang", {
         state: {
           showSuccessAlert: true,
@@ -399,75 +340,35 @@ function TambahKendalaBarang() {
       });
     } catch (error) {
       console.error("❌ Gagal simpan data:", error);
-      console.log("📋 Response error detail:", error.response);
-
+      
+      // Penanganan pesan error dari backend yang variatif
       let errorMessage = "Terjadi kesalahan saat menyimpan data.";
-
       if (error.response?.status === 422) {
         const errorMessages = error.response.data.errors || {};
         setErrors(errorMessages);
-        errorMessage =
-          Object.values(errorMessages)[0]?.[0] || "Validasi data gagal.";
-
-        Swal.fire({
-          title: "Validasi Gagal!",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonColor: "#3085d6",
-          confirmButtonText: "Mengerti",
-        });
+        errorMessage = Object.values(errorMessages)[0]?.[0] || "Validasi data gagal.";
+        Swal.fire({ title: "Validasi Gagal!", text: errorMessage, icon: "error" });
       } else if (error.response?.status === 400) {
         errorMessage = error.response.data.message || "Data tidak valid.";
-
-        Swal.fire({
-          title: "Gagal!",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonColor: "#3085d6",
-          confirmButtonText: "Mengerti",
-        });
+        Swal.fire({ title: "Gagal!", text: errorMessage, icon: "error" });
       } else if (error.response?.data?.message) {
-        // 🔥 TAMPILKAN PESAN ERROR DARI BACKEND DENGAN DETAIL
         errorMessage = error.response.data.message;
-
         Swal.fire({
           title: "Gagal Menyimpan!",
-          html: `
-          <div style="text-align: left;">
-            <p><strong>Error:</strong> ${errorMessage}</p>
-            ${
-              error.response.data.error
-                ? `<p><strong>Detail:</strong> ${error.response.data.error}</p>`
-                : ""
-            }
-          </div>
-        `,
+          html: `<div style="text-align: left;"><p><strong>Error:</strong> ${errorMessage}</p></div>`,
           icon: "error",
-          confirmButtonColor: "#3085d6",
-          confirmButtonText: "Mengerti",
         });
       } else if (error.response?.status === 500) {
-        Swal.fire({
-          title: "Error Server!",
-          text: "Terjadi kesalahan di server. Silakan coba lagi atau hubungi administrator.",
-          icon: "error",
-          confirmButtonColor: "#3085d6",
-          confirmButtonText: "Mengerti",
-        });
+        Swal.fire({ title: "Error Server!", text: "Terjadi kesalahan di server.", icon: "error" });
       } else {
-        Swal.fire({
-          title: "Kesalahan Jaringan!",
-          text: "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.",
-          icon: "error",
-          confirmButtonColor: "#3085d6",
-          confirmButtonText: "Mengerti",
-        });
+        Swal.fire({ title: "Kesalahan Jaringan!", text: "Tidak dapat terhubung ke server.", icon: "error" });
       }
     } finally {
       setLoading(false);
     }
   };
 
+  // --- UI RENDERING ---
   return (
     <div className="master-main-content-fixed">
       <main className="master-main-content-fixed">
@@ -475,12 +376,11 @@ function TambahKendalaBarang() {
           <div className="form-container">
             <h2>Tambah Data Kendala Barang</h2>
 
-            {/* Section Informasi Kendala */}
             <div className="section-info">
               <h3>Informasi Kendala</h3>
 
               <div className="form-grid">
-                {/* Nama Karyawan dengan Search */}
+                {/* Field: Nama Karyawan (Custom Dropdown + Search) */}
                 <div className="form-group dropdown-container-karyawan">
                   <label htmlFor="search_karyawan" className="required">
                     Nama Karyawan
@@ -496,52 +396,30 @@ function TambahKendalaBarang() {
                       className={errors.id_karyawan ? "error-input" : ""}
                       disabled={karyawanLoading}
                     />
-                    <div
-                      className="dropdown-icon"
-                      onClick={toggleDropdownKaryawan}
-                    >
-                      <FaChevronDown
-                        className={`dropdown-arrow ${
-                          showDropdownKaryawan ? "rotate" : ""
-                        }`}
-                      />
+                    <div className="dropdown-icon" onClick={toggleDropdownKaryawan}>
+                      <FaChevronDown className={`dropdown-arrow ${showDropdownKaryawan ? "rotate" : ""}`} />
                     </div>
                   </div>
                   {showDropdownKaryawan && filteredKaryawan.length > 0 && (
                     <div className="dropdown-list">
                       {filteredKaryawan.map((k) => (
-                        <div
-                          key={k.id}
-                          className="dropdown-item"
-                          onClick={() => handleSelectKaryawan(k.id, k.nama)}
-                        >
+                        <div key={k.id} className="dropdown-item" onClick={() => handleSelectKaryawan(k.id, k.nama)}>
                           {k.nama}
                         </div>
                       ))}
                     </div>
                   )}
-                  {showDropdownKaryawan &&
-                    filteredKaryawan.length === 0 &&
-                    searchKaryawan && (
-                      <div className="dropdown-list">
-                        <div className="dropdown-item no-results">
-                          {karyawanLoading
-                            ? "Memuat data..."
-                            : "Tidak ada karyawan dengan barang dipinjam"}
-                        </div>
+                  {showDropdownKaryawan && filteredKaryawan.length === 0 && searchKaryawan && (
+                    <div className="dropdown-list">
+                      <div className="dropdown-item no-results">
+                        {karyawanLoading ? "Memuat data..." : "Tidak ada karyawan dengan barang dipinjam"}
                       </div>
-                    )}
-                  {errors.id_karyawan && (
-                    <span className="error-text">{errors.id_karyawan[0]}</span>
+                    </div>
                   )}
-                  {karyawanLoading && (
-                    <small style={{ color: "#666", fontSize: "12px" }}>
-                      Memuat data karyawan...
-                    </small>
-                  )}
+                  {errors.id_karyawan && <span className="error-text">{errors.id_karyawan[0]}</span>}
                 </div>
 
-                {/* Nama Barang dengan Search */}
+                {/* Field: Nama Barang (Custom Dropdown + Search, Dependent on Karyawan) */}
                 <div className="form-group dropdown-container-barang">
                   <label htmlFor="search_barang" className="required">
                     Nama Barang
@@ -553,25 +431,12 @@ function TambahKendalaBarang() {
                       value={searchBarang}
                       onChange={handleSearchBarangChange}
                       onFocus={() => setShowDropdownBarang(true)}
-                      placeholder={
-                        !formData.id_karyawan
-                          ? "Pilih karyawan terlebih dahulu"
-                          : inventarisLoading
-                          ? "Memuat barang..."
-                          : "Cari nama barang..."
-                      }
+                      placeholder={!formData.id_karyawan ? "Pilih karyawan terlebih dahulu" : inventarisLoading ? "Memuat barang..." : "Cari nama barang..."}
                       className={errors.id_inventaris ? "error-input" : ""}
                       disabled={!formData.id_karyawan || inventarisLoading}
                     />
-                    <div
-                      className="dropdown-icon"
-                      onClick={toggleDropdownBarang}
-                    >
-                      <FaChevronDown
-                        className={`dropdown-arrow ${
-                          showDropdownBarang ? "rotate" : ""
-                        }`}
-                      />
+                    <div className="dropdown-icon" onClick={toggleDropdownBarang}>
+                      <FaChevronDown className={`dropdown-arrow ${showDropdownBarang ? "rotate" : ""}`} />
                     </div>
                   </div>
                   {showDropdownBarang && filteredBarang.length > 0 && (
@@ -579,84 +444,55 @@ function TambahKendalaBarang() {
                       {filteredBarang.map((inv) => {
                         const itemId = inv.id_inventaris || inv.id;
                         return (
-                          <div
-                            key={itemId}
-                            className="dropdown-item"
-                            onClick={() =>
-                              handleSelectBarang(itemId, inv.nama_barang)
-                            }
-                          >
+                          <div key={itemId} className="dropdown-item" onClick={() => handleSelectBarang(itemId, inv.nama_barang)}>
                             {inv.nama_barang}
                           </div>
                         );
                       })}
                     </div>
                   )}
-                  {showDropdownBarang &&
-                    filteredBarang.length === 0 &&
-                    searchBarang && (
-                      <div className="dropdown-list">
-                        <div className="dropdown-item no-results">
-                          {!formData.id_karyawan
-                            ? "Pilih karyawan terlebih dahulu"
-                            : inventarisLoading
-                            ? "Memuat data barang..."
-                            : "Tidak ada barang dipinjam"}
-                        </div>
+                  {showDropdownBarang && filteredBarang.length === 0 && searchBarang && (
+                    <div className="dropdown-list">
+                      <div className="dropdown-item no-results">
+                        {!formData.id_karyawan ? "Pilih karyawan terlebih dahulu" : inventarisLoading ? "Memuat data barang..." : "Tidak ada barang dipinjam"}
                       </div>
-                    )}
-                  {errors.id_inventaris && (
-                    <span className="error-text">
-                      {errors.id_inventaris[0]}
-                    </span>
+                    </div>
                   )}
+                  {errors.id_inventaris && <span className="error-text">{errors.id_inventaris[0]}</span>}
                 </div>
 
-                {/* Tanggal Kendala */}
+                {/* Field: Tanggal Kendala */}
                 <div className="form-group">
-                  <label htmlFor="tanggal_kendala" className="required">
-                    Tanggal Kendala
-                  </label>
+                  <label htmlFor="tanggal_kendala" className="required">Tanggal Kendala</label>
                   <input
                     id="tanggal_kendala"
                     type="date"
                     name="tanggal_kendala"
                     value={formData.tanggal_kendala}
                     onChange={handleInputChange}
-                    required
                     className={errors.tanggal_kendala ? "error-input" : ""}
                   />
-                  {errors.tanggal_kendala && (
-                    <span className="error-text">
-                      {errors.tanggal_kendala[0]}
-                    </span>
-                  )}
+                  {errors.tanggal_kendala && <span className="error-text">{errors.tanggal_kendala[0]}</span>}
                 </div>
 
-                {/* Status */}
+                {/* Field: Status (Disabled - Default Open) */}
                 <div className="form-group">
-                  <label htmlFor="status" className="required">
-                    Status
-                  </label>
+                  <label htmlFor="status" className="required">Status</label>
                   <select
                     id="status"
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    required
-                    className={errors.status ? "error-input" : ""}
                     disabled
+                    className={errors.status ? "error-input" : ""}
                   >
                     <option value="Open">Open</option>
                     <option value="In progress">In Progress</option>
                     <option value="Closed">Closed</option>
                   </select>
-                  {errors.status && (
-                    <span className="error-text">{errors.status[0]}</span>
-                  )}
                 </div>
 
-                {/* Deskripsi Kendala */}
+                {/* Field: Deskripsi (Full Width) */}
                 <div className="form-group full-width">
                   <label htmlFor="deskripsi_kendala">Deskripsi</label>
                   <textarea
@@ -668,16 +504,12 @@ function TambahKendalaBarang() {
                     className={errors.deskripsi_kendala ? "error-input" : ""}
                     rows="4"
                   />
-                  {errors.deskripsi_kendala && (
-                    <span className="error-text">
-                      {errors.deskripsi_kendala[0]}
-                    </span>
-                  )}
+                  {errors.deskripsi_kendala && <span className="error-text">{errors.deskripsi_kendala[0]}</span>}
                 </div>
               </div>
             </div>
 
-            {/* Tombol Aksi */}
+            {/* Tombol Footer Aksi */}
             <div className="form-actions">
               <button
                 type="button"
@@ -689,9 +521,7 @@ function TambahKendalaBarang() {
               <button
                 type="submit"
                 className="btn-save"
-                disabled={
-                  loading || !formData.id_karyawan || !formData.id_inventaris
-                }
+                disabled={loading || !formData.id_karyawan || !formData.id_inventaris}
                 onClick={handleSubmit}
               >
                 {loading ? "Menyimpan..." : "Simpan Data"}

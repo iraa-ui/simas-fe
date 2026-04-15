@@ -20,34 +20,37 @@ import "../styles/Karyawans.css";
 import dataTidakDitemukan from "../assets/data-tidak-ada.png";
 
 function Karyawans() {
+  // 🔹 Inisialisasi API URL dan Hooks Navigasi
   const API_URL = "/karyawans";
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 🔹 State Utama untuk Data dan Status Loading
   const [dataKaryawan, setDataKaryawan] = useState([]);
-  const [allData, setAllData] = useState([]);
+  const [allData, setAllData] = useState([]); // Master data untuk filter/search lokal
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchError, setSearchError] = useState("");
 
-  // 🔹 State untuk detail modal
+  // 🔹 State untuk Modal Detail Karyawan
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // 🔹 Pagination State
+  // 🔹 State untuk Kontrol Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // 🔹 State untuk Filter Dropdown
+  // 🔹 State untuk Kontrol Filter Status
   const [activeFilter, setActiveFilter] = useState("semua");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
+  // 🔹 Side Effect: Fetch data saat komponen load atau ada notifikasi sukses dari page lain
   useEffect(() => {
     fetchData();
 
-    // 🔹 CEK APAKAH ADA STATE SUCCESS DARI HALAMAN TAMBAH/EDIT
+    // Cek notifikasi sukses (setelah redirect dari Tambah/Edit)
     if (location.state?.showSuccessAlert) {
       Swal.fire({
         title: "Berhasil!",
@@ -57,15 +60,14 @@ function Karyawans() {
         showConfirmButton: false,
       });
 
-      // 🔹 REFRESH DATA SETELAH TAMBAH/EDIT
       fetchData();
 
-      // 🔹 HAPUS STATE AGAR TIDAK MUNCUL LAGI SAAT REFRESH
+      // Reset state navigasi agar alert tidak muncul berulang kali
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location]);
 
-  // 🔹 Fungsi untuk mengambil data karyawan
+  // 🔹 Fungsi Fetching Data dari Mock API
   const fetchData = () => {
     setLoading(true);
     setError(false);
@@ -78,11 +80,11 @@ function Karyawans() {
           response.data.data || response.data.karyawan || response.data || [];
 
         if (Array.isArray(hasil) && hasil.length > 0) {
-          // 🔹 URUTKAN DATA BERDASARKAN CREATED_AT DESCENDING (DATA BARU DIATAS)
+          // Sortir berdasarkan created_at (Terbaru di atas)
           hasil = hasil.sort((a, b) => {
             const dateA = new Date(a.created_at || 0);
             const dateB = new Date(b.created_at || 0);
-            return dateB - dateA; // Descending: data baru di atas
+            return dateB - dateA;
           });
 
           setDataKaryawan(hasil);
@@ -103,7 +105,7 @@ function Karyawans() {
       });
   };
 
-  // 🔹 FUNGSI FILTER DATA
+  // 🔹 Fungsi Logika Filter Berdasarkan Status (Active/Inactive)
   const applyFilter = (filterType) => {
     setActiveFilter(filterType);
     setCurrentPage(1);
@@ -130,19 +132,19 @@ function Karyawans() {
     setDataKaryawan(filteredData);
   };
 
-  // 🔹 FUNGSI PAGINATION
+  // 🔹 Fungsi Navigasi Halaman Table
   const paginate = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
     setCurrentPage(pageNumber);
   };
 
-  // 🔹 Fungsi untuk mengubah jumlah item per halaman
+  // 🔹 Fungsi Mengubah Limit Data per Halaman
   const handleItemsPerPageChange = (value) => {
     setItemsPerPage(parseInt(value));
     setCurrentPage(1);
   };
 
-  // 🔹 Fungsi untuk pencarian data karyawan OTOMATIS
+  // 🔹 Side Effect: Pencarian Otomatis saat user mengetik
   useEffect(() => {
     if (!searchQuery.trim()) {
       applyFilter(activeFilter);
@@ -157,7 +159,7 @@ function Karyawans() {
       return nama.includes(searchLower);
     });
 
-    // Apply filter tambahan pada hasil search
+    // Gabungkan dengan filter status yang sedang aktif
     if (activeFilter !== "semua") {
       hasil = hasil.filter((item) => {
         const status = item.status?.toLowerCase() || "";
@@ -186,7 +188,7 @@ function Karyawans() {
     setCurrentPage(1);
   }, [searchQuery, allData, activeFilter]);
 
-  // 🔹 Fungsi untuk reset pencarian
+  // 🔹 Fungsi Reset Input Pencarian
   const handleResetSearch = () => {
     setSearchQuery("");
     setSearchError("");
@@ -194,7 +196,7 @@ function Karyawans() {
     setCurrentPage(1);
   };
 
-  // 🔹 Fungsi untuk konfirmasi hapus data
+  // 🔹 Fungsi Aksi Hapus Data dengan Konfirmasi SweetAlert
   const handleDeleteClick = (item) => {
     Swal.fire({
       title: "Apakah Anda yakin?",
@@ -217,7 +219,7 @@ function Karyawans() {
               timer: 1500,
               showConfirmButton: false,
             });
-            fetchData(); // 🔹 REFRESH DATA SETELAH HAPUS
+            fetchData(); // Refresh data table
           })
           .catch((error) => {
             console.error("Gagal menghapus data karyawan:", error);
@@ -240,15 +242,14 @@ function Karyawans() {
     });
   };
 
-  // 🔹 Fungsi untuk membuka detail modal
+  // 🔹 Fungsi Membuka Modal dan Mengambil Detail Lengkap (termasuk Histori)
   const openDetailModal = async (item) => {
     setDetailLoading(true);
     setSelectedItem(item);
     setShowDetailModal(true);
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = "hidden"; // Mencegah scroll pada background
 
     try {
-      // Fetch detail data dari API
       const response = await mockApi.get(`${API_URL}/${item.id}`);
       const data = response.data.data || response.data;
       if (data) {
@@ -264,24 +265,23 @@ function Karyawans() {
     }
   };
 
-  // 🔹 Fungsi untuk menutup detail modal
+  // 🔹 Fungsi Menutup Modal Detail
   const closeDetailModal = () => {
     setShowDetailModal(false);
     setSelectedItem(null);
     document.body.style.overflow = "auto";
   };
 
-  // 🔹 Navigasi ke halaman tambah
+  // 🔹 Fungsi Navigasi Tambah & Edit
   const handleTambahData = () => {
     navigate("/app/karyawans/tambah");
   };
 
-  // 🔹 Navigasi langsung ke halaman edit
   const handleEdit = (id) => {
     navigate(`/app/karyawans/edit/${id}`);
   };
 
-  // 🔹 Get display text untuk filter dropdown
+  // 🔹 Helper untuk UI Text Dropdown Filter
   const getFilterDisplayText = () => {
     switch (activeFilter) {
       case "semua":
@@ -295,7 +295,7 @@ function Karyawans() {
     }
   };
 
-  // 🔹 Function untuk status badge karyawan
+  // 🔹 Helper untuk Styling Badge Status Table
   const getStatusBadge = (status) => {
     if (!status) return "karyawan-status-badge";
 
@@ -306,7 +306,7 @@ function Karyawans() {
     return "karyawan-status-badge";
   };
 
-  // 🔹 Function untuk status badge di modal detail
+  // 🔹 Helper untuk Styling Badge Status Modal
   const getDetailStatusBadge = (status) => {
     if (!status) return "detail-status-badge";
 
@@ -318,7 +318,7 @@ function Karyawans() {
     return "detail-status-badge";
   };
 
-  // 🔹 Format tanggal lengkap dengan waktu
+  // 🔹 Helper Format Tanggal (Lengkap: Tanggal & Waktu)
   const formatDateTime = (dateString) => {
     if (!dateString) return "-";
     try {
@@ -335,7 +335,7 @@ function Karyawans() {
     }
   };
 
-  // 🔹 Format tanggal saja
+  // 🔹 Helper Format Tanggal (Hanya Tanggal)
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     try {
@@ -350,19 +350,19 @@ function Karyawans() {
     }
   };
 
-  // 🔹 Pagination Calculations
+  // 🔹 Kalkulasi Logika Pagination Table
   const totalPages = Math.ceil(dataKaryawan.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentData = dataKaryawan.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Buat array angka halaman [1, 2, 3, ...]
+  // Membuat list angka halaman untuk pagination
   const pageNumbers = [];
   for (let i = 1; i <= totalPages; i++) {
     pageNumbers.push(i);
   }
 
-  // 🔹 Fungsi untuk menampilkan state kosong
+  // 🔹 Komponen Render: Tampilan saat data kosong atau error
   const renderEmptyState = () => {
     return (
       <div className="empty-state">
@@ -378,7 +378,7 @@ function Karyawans() {
     );
   };
 
-  // Update bagian renderHistoriKaryawan dengan pagination
+  // 🔹 Komponen Render: Tabel Histori di dalam Modal Detail
   const renderHistoriKaryawan = () => {
     if (
       !selectedItem?.histori_karyawan ||
@@ -391,7 +391,7 @@ function Karyawans() {
       );
     }
 
-    // Sort data terbaru di atas
+    // Sortir histori terbaru
     const sortedHistori = [...selectedItem.histori_karyawan].sort((a, b) => {
       return (
         new Date(b.tanggal_dipinjam || b.created_at) -
@@ -399,12 +399,10 @@ function Karyawans() {
       );
     });
 
-    // Pagination: hanya tampilkan 5 data pertama
+    // Batasi penampilan data histori (limit 5)
     const itemsPerPage = 5;
-    const totalPages = Math.ceil(sortedHistori.length / itemsPerPage);
-    const currentHistoriPage = 1; // Default halaman pertama
-    const startIndex = (currentHistoriPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
+    const startIndex = 0;
+    const endIndex = itemsPerPage;
     const currentHistoriData = sortedHistori.slice(startIndex, endIndex);
 
     return (
@@ -440,7 +438,7 @@ function Karyawans() {
           </tbody>
         </table>
 
-        {/* Pagination info jika lebih dari 5 data */}
+        {/* Info jika data histori melebihi limit tampilan */}
         {sortedHistori.length > itemsPerPage && (
           <div className="pagination-histori-info-improved">
             <p>
@@ -457,6 +455,7 @@ function Karyawans() {
     );
   };
 
+  // 🔹 RENDER UTAMA KOMPONEN
   return (
     <div
       className={`master-main-content-fixed ${
@@ -464,15 +463,16 @@ function Karyawans() {
       }`}
     >
       <main className="master-main-content-fixed">
-        {/* Judul Halaman */}
+        {/* Header Bagian Judul */}
         <div className="page-header">
           <h1>Data Karyawan</h1>
         </div>
 
+        {/* Section Kontrol: Search, Filter, dan Tambah Data */}
         <section className="master-table-section-fixed">
           <div className="section-header">
             <div className="header-actions">
-              {/* Search Form - OTOMATIS */}
+              {/* Grup Pencarian */}
               <div className="search-form-compact">
                 <div className="search-input-group-compact">
                   <FaSearch className="search-icon-compact" />
@@ -496,7 +496,7 @@ function Karyawans() {
                 </div>
               </div>
 
-              {/* 🔹 FILTER DROPDOWN */}
+              {/* Grup Dropdown Filter */}
               <div className="filter-dropdown-container">
                 <div className="filter-dropdown">
                   <button
@@ -542,13 +542,13 @@ function Karyawans() {
                 </div>
               </div>
 
-              {/* Tombol Tambah Data */}
               <button className="btn-tambah" onClick={handleTambahData}>
                 <FaPlus /> Tambah Data
               </button>
             </div>
           </div>
 
+          {/* Bagian Tabel Data */}
           <div className="table-container-fixed">
             {loading ? (
               <div className="loading-state">
@@ -619,10 +619,10 @@ function Karyawans() {
             )}
           </div>
 
-          {/* 🔹 PAGINATION BARU - Row Page di Kiri, Pagination di Kanan */}
+          {/* Baris Kontrol Pagination Bawah */}
           {!loading && dataKaryawan.length > 0 && (
             <div className="pagination-container">
-              {/* Row Page Selection - Kiri */}
+              {/* Seleksi Jumlah Row (Kiri) */}
               <div className="row-page-selection">
                 <span className="row-page-label">Rows per page:</span>
                 <select
@@ -642,7 +642,7 @@ function Karyawans() {
                 </span>
               </div>
 
-              {/* Pagination Controls - Kanan */}
+              {/* Navigasi Halaman (Kanan) */}
               <div className="pagination-controls">
                 <button
                   onClick={() => paginate(currentPage - 1)}
@@ -677,6 +677,7 @@ function Karyawans() {
         </section>
       </main>
 
+      {/* Bagian MODAL DETAIL FULLSCREEN */}
       {showDetailModal && selectedItem && (
         <>
           <div className="blur-overlay"></div>
@@ -689,7 +690,7 @@ function Karyawans() {
             </div>
 
             <div className="detail-modal-content-improved">
-              {/* Sisi Kiri - Informasi Karyawan */}
+              {/* Kolom Informasi Data Diri */}
               <div className="detail-info-side">
                 <div className="detail-info-card">
                   <h3>👤 Informasi Karyawan</h3>
@@ -787,7 +788,7 @@ function Karyawans() {
                 </div>
               </div>
 
-              {/* Sisi Kanan - Histori Peminjaman */}
+              {/* Kolom Histori Transaksi Karyawan */}
               <div className="histori-side">
                 <div className="histori-card">
                   <h3>📊 Histori Karyawan</h3>

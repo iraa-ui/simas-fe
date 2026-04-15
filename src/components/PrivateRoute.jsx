@@ -4,10 +4,11 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../provider/AuthProvider";
 
 const PrivateRoute = ({ children }) => {
+  // Ambil state auth dan loading dari context
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Show loading while checking auth
+  // Tampilkan loading screen selama proses verifikasi session
   if (loading) {
     return (
       <div
@@ -23,7 +24,7 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  // ✅ PERBAIKAN: Debug untuk melihat apa yang terjadi
+  //  Debugging: Monitor status autentikasi dan token di console
   console.log("PrivateRoute Check:", {
     user: !!user,
     loading,
@@ -31,13 +32,13 @@ const PrivateRoute = ({ children }) => {
     hasToken: !!localStorage.getItem("authToken"),
   });
 
-  // Redirect to login if not authenticated
+  // Jika user tidak ditemukan, arahkan ke login dan simpan path terakhir di state
   if (!user) {
     console.log("❌ Redirect to login - No user");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // ✅ Render protected content
+  //  Autentikasi berhasil, render komponen anak (protected content)
   console.log("✅ Access granted to:", location.pathname);
   return children;
 };

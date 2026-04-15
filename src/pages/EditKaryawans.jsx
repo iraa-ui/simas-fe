@@ -9,12 +9,14 @@ function EditKaryawans() {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  // State untuk menampung data input yang sedang diketik
   const [formData, setFormData] = useState({
     nip: "",
     nama: "",
     status: "",
   });
 
+  // State untuk menyimpan data asli dari database sebagai pembanding
   const [originalData, setOriginalData] = useState({
     current_nip: "",
     current_nama: "",
@@ -26,7 +28,7 @@ function EditKaryawans() {
   const [fetchLoading, setFetchLoading] = useState(true);
   const [hasUserMadeChanges, setHasUserMadeChanges] = useState(false);
 
-  // 🔹 Ambil data berdasarkan ID untuk di-edit
+  // Mengambil detail data karyawan berdasarkan ID saat halaman dimuat
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -37,6 +39,7 @@ function EditKaryawans() {
 
         let data = null;
 
+        // Logika pengecekan struktur response API yang berbeda-beda
         if (response.data) {
           if (response.data.data) {
             if (response.data.data.karyawan) {
@@ -74,12 +77,14 @@ function EditKaryawans() {
           statusValue
         );
 
+        // Simpan ke originalData untuk pengecekan perubahan nantinya
         setOriginalData({
           current_nip: nipValue,
           current_nama: namaValue,
           current_status: statusValue,
         });
 
+        // Masukkan data ke form input
         setFormData({
           nip: nipValue,
           nama: namaValue,
@@ -105,16 +110,16 @@ function EditKaryawans() {
     }
   }, [id, navigate]);
 
-  // 🔹 Handle input perubahan value form
+  // Fungsi untuk menangani setiap perubahan di input field
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Set flag bahwa user telah melakukan perubahan
+    // Tandai bahwa user sudah mulai menyentuh/mengubah form
     if (!hasUserMadeChanges) {
       setHasUserMadeChanges(true);
     }
 
-    // Clear error ketika user mulai mengetik
+    // Hapus pesan error pada field yang sedang diketik
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -122,22 +127,17 @@ function EditKaryawans() {
       }));
     }
 
-    // Validasi real-time untuk NIP
+    // Validasi khusus input NIP (Hanya angka dan batasan digit)
     if (name === "nip") {
-      // Hanya izinkan angka
       if (value && !/^\d*$/.test(value)) {
-        // Set error state untuk NIP TANPA reset nilai
         setErrors((prev) => ({
           ...prev,
           nip: ["NIP harus berupa angka"],
         }));
-        // Biarkan nilai tetap seperti sebelumnya, jangan reset
         return;
       }
 
-      // Validasi panjang NIP (maksimal 18 digit)
       if (value.length > 18) {
-        // Potong ke 18 digit
         setFormData((prev) => ({
           ...prev,
           nip: value.slice(0, 18),
@@ -145,20 +145,18 @@ function EditKaryawans() {
         return;
       }
 
-      // 🔹 VALIDASI REAL-TIME UNTUK NIP YANG DIHAPUS
+      // Validasi panjang minimal NIP secara real-time
       if (value.length === 0) {
         setErrors((prev) => ({
           ...prev,
           nip: ["NIP wajib diisi"],
         }));
       } else if (value.length < 9) {
-        // 🔹 PERUBAHAN: MINIMAL 9 DIGIT, BUKAN 18 DIGIT
         setErrors((prev) => ({
           ...prev,
           nip: ["NIP minimal 9 digit"],
         }));
       } else {
-        // Clear error jika NIP sudah valid
         setErrors((prev) => ({
           ...prev,
           nip: "",
@@ -166,27 +164,22 @@ function EditKaryawans() {
       }
     }
 
-    // Validasi real-time untuk NAMA (harus huruf)
+    // Validasi khusus Nama (Hanya huruf dan karakter nama)
     if (name === "nama") {
-      // Hanya izinkan huruf, spasi, dan karakter khusus nama
       if (value && !/^[a-zA-Z\s.'-]*$/.test(value)) {
-        // Set error state untuk Nama TANPA reset nilai
         setErrors((prev) => ({
           ...prev,
           nama: ["Nama harus berupa huruf"],
         }));
-        // Biarkan nilai tetap seperti sebelumnya, jangan reset
         return;
       }
 
-      // Validasi real-time untuk nama yang dihapus
       if (value.length === 0) {
         setErrors((prev) => ({
           ...prev,
           nama: ["Nama wajib diisi"],
         }));
       } else {
-        // Clear error jika nama sudah valid
         setErrors((prev) => ({
           ...prev,
           nama: "",
@@ -194,18 +187,17 @@ function EditKaryawans() {
       }
     }
 
-    // Update form data jika validasi berhasil
+    // Update state formData setiap ada ketikan valid
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  // 🔹 Validasi form sebelum submit
+  // Fungsi validasi manual sebelum data dikirim ke server
   const validateForm = () => {
     const newErrors = {};
 
-    // 🔹 VALIDASI NIP - MINIMAL 9 DIGIT, MAKSIMAL 18 DIGIT
     if (!formData.nip.trim()) {
       newErrors.nip = ["NIP wajib diisi."];
     } else if (!/^\d+$/.test(formData.nip)) {
@@ -216,7 +208,6 @@ function EditKaryawans() {
       newErrors.nip = ["NIP maksimal 18 digit."];
     }
 
-    // 🔹 VALIDASI NAMA
     if (!formData.nama.trim()) {
       newErrors.nama = ["Nama wajib diisi."];
     } else if (formData.nama.length > 100) {
@@ -228,7 +219,7 @@ function EditKaryawans() {
     return newErrors;
   };
 
-  // 🔹 Cek apakah ada perubahan data
+  // Mengecek apakah ada perbedaan antara input sekarang dengan data awal
   const hasDataChanged = () => {
     const trimmedNip = formData.nip.trim();
     const trimmedNama = formData.nama.trim();
@@ -239,12 +230,12 @@ function EditKaryawans() {
     );
   };
 
-  // 🔹 Update data ke backend
+  // Fungsi utama untuk memproses pengiriman data edit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
-    // 🔹 CEK APAKAH KARYAWAN ACTIVE - TAMPILKAN ERROR LANGSUNG
+    // Proteksi: Karyawan dengan status 'active' dilarang keras untuk diubah datanya
     if (isActiveKaryawan) {
       Swal.fire({
         title: "Gagal!",
@@ -255,12 +246,12 @@ function EditKaryawans() {
       return;
     }
 
-    // Validasi frontend UNTUK KARYAWAN INACTIVE
+    // Jalankan validasi form
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       
-      // 🔹 SWEETALERT KHUSUS UNTUK NIP KURANG DARI 9 DIGIT
+      // Notifikasi khusus jika NIP belum mencapai panjang minimal
       if (formErrors.nip && formErrors.nip[0] === "NIP minimal 9 digit.") {
         Swal.fire({
           title: "Gagal!",
@@ -271,7 +262,6 @@ function EditKaryawans() {
         return;
       }
 
-      // 🔹 PERBAIKAN PESAN ERROR VALIDASI UNTUK KASUS LAIN
       Swal.fire({
         title: "Gagal!",
         text: "Harap perbaiki data sebelum menyimpan!",
@@ -284,7 +274,7 @@ function EditKaryawans() {
     const trimmedNip = formData.nip.trim();
     const trimmedNama = formData.nama.trim();
 
-    // Cek jika tidak ada perubahan
+    // Jika user klik simpan tapi datanya sebenarnya masih sama
     if (
       trimmedNip === originalData.current_nip &&
       trimmedNama === originalData.current_nama
@@ -298,7 +288,7 @@ function EditKaryawans() {
       return;
     }
 
-    // 🔹 KONFIRMASI SEBELUM UPDATE (HANYA UNTUK INACTIVE)
+    // Munculkan dialog konfirmasi sebelum benar-benar menyimpan ke API
     const confirmResult = await Swal.fire({
       title: "Konfirmasi Perubahan",
       text: "Apakah Anda yakin ingin mengubah data karyawan ini?",
@@ -311,7 +301,6 @@ function EditKaryawans() {
       reverseButtons: true
     });
 
-    // Jika user membatalkan
     if (!confirmResult.isConfirmed) {
       return;
     }
@@ -331,7 +320,7 @@ function EditKaryawans() {
       const response = await mockApi.put(`${API_URL}/${id}`, payload);
       console.log("✅ Response sukses:", response.data);
 
-      // 🔹 LANGSUNG REDIRECT KE HALAMAN KARYAWANS DENGAN STATE SUCCESS
+      // Pindah ke halaman daftar karyawan sambil membawa status sukses untuk SweetAlert di sana
       navigate("/app/karyawans", { 
         state: { 
           showSuccessAlert: true,
@@ -342,6 +331,7 @@ function EditKaryawans() {
     } catch (error) {
       console.error("❌ Gagal update data:", error);
 
+      // Penanganan error validasi dari sisi server (Backend)
       if (error.response?.status === 422) {
         setErrors(error.response.data.errors || {});
         const errorMessages = error.response.data.errors;
@@ -362,7 +352,6 @@ function EditKaryawans() {
           });
         }
       } else if (error.response?.status === 403) {
-        // 🔹 PERBAIKAN PESAN ERROR KARYAWAN SEDANG AKTIF
         Swal.fire({
           title: "Gagal!",
           text: "Karyawan ini sedang melakukan aktivitas, tidak dapat diubah.",
@@ -382,7 +371,7 @@ function EditKaryawans() {
     }
   };
 
-  // Tampilkan loading saat mengambil data
+  // Tampilan placeholder saat data sedang proses loading dari API
   if (fetchLoading) {
     return (
       <div className="mmaster-main-content-fixed">
@@ -400,34 +389,22 @@ function EditKaryawans() {
     );
   }
 
-  // 🔹 Format status untuk display
+  // Merubah teks status dari value database ke teks yang enak dibaca
   const getStatusDisplay = (status) => {
     if (status === "active") return "Active";
     if (status === "inactive") return "Inactive";
     return "Unknown";
   };
 
-  // 🔹 Check apakah karyawan aktif
   const isActiveKaryawan = originalData.current_status === "active";
 
-  // 🔹 Check apakah tombol simpan harus disabled
+  // Fungsi pengecekan kondisi untuk menentukan apakah tombol simpan boleh diklik atau tidak
   const isSaveDisabled = () => {
-    // Jika loading, disable tombol
     if (loading) return true;
-    
-    // Jika karyawan active, tombol disabled
     if (isActiveKaryawan) return true;
-    
-    // Jika karyawan inactive, tombol disabled sampai user melakukan perubahan
     if (!isActiveKaryawan && !hasUserMadeChanges) return true;
-    
-    // Jika ada error, disable tombol
     if (Object.keys(errors).some(key => errors[key] !== "")) return true;
-    
-    // Jika NIP atau Nama kosong, disable tombol
     if (!formData.nip.trim() || !formData.nama.trim()) return true;
-    
-    // Jika NIP kurang dari 9 digit, disable tombol
     if (formData.nip.length < 9) return true;
     
     return false;
@@ -440,12 +417,11 @@ function EditKaryawans() {
           <div className="form-container">
             <h2>Edit Data Karyawan</h2>
 
-            {/* Section Informasi Karyawan */}
             <div className="section-info">
               <h3>Informasi Karyawan</h3>
 
               <div className="form-grid">
-                {/* NIP */}
+                {/* Input Field NIP */}
                 <div className="form-group">
                   <label htmlFor="nip" className="required">
                     NIP
@@ -468,7 +444,7 @@ function EditKaryawans() {
                   )}
                 </div>
 
-                {/* Nama Karyawan */}
+                {/* Input Field Nama */}
                 <div className="form-group">
                   <label htmlFor="nama-karyawan" className="required">
                     Nama Karyawan
@@ -492,7 +468,7 @@ function EditKaryawans() {
                   )}
                 </div>
 
-                {/* 🔹 Status Karyawan - SELALU DISABLED */}
+                {/* Input Field Status (Hanya untuk dilihat, tidak bisa diubah) */}
                 <div className="form-group">
                   <label htmlFor="status">Status Karyawan</label>
                   <input
@@ -508,7 +484,7 @@ function EditKaryawans() {
               </div>
             </div>
 
-            {/* 🔹 Tombol Aksi */}
+            {/* Bagian Bawah Form untuk aksi Batal dan Simpan */}
             <div className="form-actions">
               <button
                 type="button"

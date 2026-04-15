@@ -8,6 +8,8 @@ function TambahAset() {
   const navigate = useNavigate();
   const BASE_URL = "/inventaris";
 
+  // --- STATE MANAGEMENT ---
+  // State untuk menyimpan seluruh nilai input form
   const [formData, setFormData] = useState({
     foto: null,
     no_inventaris: "",
@@ -20,11 +22,14 @@ function TambahAset() {
     keterangan: "",
   });
 
+  // State untuk preview gambar, loading status, pesan error, dan status validasi
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [loadingNoInventaris, setLoadingNoInventaris] = useState(true);
+  const [isFormValid, setIsFormValid] = useState(false);
 
+  // Opsi status yang tersedia di sistem
   const STATUS_OPTIONS = [
     "Tersedia",
     "Dipinjam",
@@ -36,16 +41,16 @@ function TambahAset() {
     "Sudah Diperbaiki",
   ];
 
-  // 🔥 PERBAIKAN: Force refresh data dengan menghapus cache
+  // --- LOGIC: AUTO-GENERATE NO INVENTARIS ---
+  // Mengambil nomor inventaris berikutnya dari server saat komponen dimuat
   useEffect(() => {
     const fetchNextNoInventaris = async () => {
       try {
         setLoadingNoInventaris(true);
 
-        // 🔥 FORCE REFRESH: Clear cache dan gunakan timestamp
+        // FORCE REFRESH: Menggunakan timestamp untuk menghindari cache browser
         const timestamp = new Date().getTime();
 
-        // Option 1: Gunakan endpoint khusus
         const response = await mockApi.get(
           `${BASE_URL}/next-no-inventaris?t=${timestamp}`,
           {
@@ -62,12 +67,7 @@ function TambahAset() {
             ...prev,
             no_inventaris: response.data.next_no_inventaris,
           }));
-
-          // 🔥 DEBUG: Log hasil
-          console.log(
-            "✅ Generated No Inventaris:",
-            response.data.next_no_inventaris
-          );
+          console.log("✅ Generated No Inventaris:", response.data.next_no_inventaris);
         } else {
           await fetchManualFallback();
         }
@@ -79,22 +79,19 @@ function TambahAset() {
       }
     };
 
-    // 🔥 PERBAIKAN: Fallback yang lebih baik
+    // Fallback jika endpoint khusus gagal: Mencari gap nomor yang kosong secara manual
     const fetchManualFallback = async () => {
       try {
         const response = await mockApi.get(
           `${BASE_URL}?t=${new Date().getTime()}`,
           {
-            headers: {
-              "Cache-Control": "no-cache",
-            },
+            headers: { "Cache-Control": "no-cache" },
           }
         );
 
         if (response.data && response.data.data) {
           const existingData = response.data.data;
 
-          // 🔥 LOGIC FALLBACK: Cari gap secara manual
           const existingNumbers = existingData
             .map((item) => {
               const match = item.no_inventaris?.match(/INV\/(\d+)/);
@@ -106,7 +103,7 @@ function TambahAset() {
           let nextNumber = 1;
           for (let i = 0; i < existingNumbers.length; i++) {
             if (existingNumbers[i] > nextNumber) {
-              break; // Found gap
+              break; 
             }
             nextNumber = existingNumbers[i] + 1;
           }
@@ -122,20 +119,15 @@ function TambahAset() {
         }
       } catch (fallbackError) {
         console.error("Fallback juga gagal:", fallbackError);
-        setFormData((prev) => ({
-          ...prev,
-          no_inventaris: "INV/01",
-        }));
+        setFormData((prev) => ({ ...prev, no_inventaris: "INV/01" }));
       }
     };
 
     fetchNextNoInventaris();
   }, []);
 
-  // Tambah state ini setelah state lainnya
-  const [isFormValid, setIsFormValid] = useState(false);
-
-  // 🔥 GANTI EFFECT VALIDASI YANG SUDAH ADA dengan ini:
+  // --- LOGIC: FORM VALIDATION ---
+  // Mengecek apakah field wajib sudah terisi untuk mengaktifkan tombol simpan
   useEffect(() => {
     const isValid =
       formData.foto !== null &&
@@ -152,20 +144,23 @@ function TambahAset() {
     formData.status,
   ]);
 
-  // 🔥 Format harga otomatis
+  // --- LOGIC: INPUT FORMATTERS ---
+  // Format angka ke format ribuan (dot separator) secara otomatis
   const formatHarga = (value) => {
     const numericValue = value.replace(/\D/g, "");
     if (numericValue === "") return "";
     return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
+  // --- EVENT HANDLERS ---
+  // Menangani perubahan pada setiap input form (text, file, select)
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
     if (name === "foto") {
       const file = files[0];
       if (file) {
-        // Validasi tipe file
+        // Validasi format file
         const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
         if (!allowedTypes.includes(file.type)) {
           setErrors({
@@ -177,7 +172,7 @@ function TambahAset() {
           return;
         }
 
-        // Validasi ukuran file
+        // Validasi ukuran file (Max 5MB)
         if (file.size > 5 * 1024 * 1024) {
           setErrors({
             foto: "Ukuran file harus di bawah 5MB",
@@ -188,12 +183,7 @@ function TambahAset() {
           return;
         }
 
-        // Jika validasi berhasil, clear errors dan set data
-        setErrors((prev) => ({
-          ...prev,
-          foto: null,
-          fotoBorder: false,
-        }));
+        setErrors((prev) => ({ ...prev, foto: null, fotoBorder: false }));
         setFormData((prev) => ({ ...prev, foto: file }));
         setPreview(URL.createObjectURL(file));
       }
@@ -201,38 +191,22 @@ function TambahAset() {
       const formattedValue = formatHarga(value);
       setFormData((prev) => ({ ...prev, [name]: formattedValue }));
     } else {
-      if (name === "no_inventaris") {
-        return;
-      }
+      // Prevent manual edit on auto-generated field
+      if (name === "no_inventaris") return;
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
 
-    // Clear error ketika user mengubah input
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
+  // Menangani proses submit data ke API
   const handleSubmit = async () => {
-    // Validasi file size (double check)
+    // Re-validasi sebelum submit
     if (formData.foto && formData.foto.size > 5 * 1024 * 1024) {
-      setErrors({
-        foto: "Ukuran file harus di bawah 5MB",
-        fotoBorder: true,
-      });
+      setErrors({ foto: "Ukuran file harus di bawah 5MB", fotoBorder: true });
       return;
-    }
-
-    // Validasi file type (double check)
-    if (formData.foto) {
-      const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
-      if (!allowedTypes.includes(formData.foto.type)) {
-        setErrors({
-          foto: "Format file harus PNG, JPG, atau JPEG",
-          fotoBorder: true,
-        });
-        return;
-      }
     }
 
     const requiredFields = ["nama_barang", "tipe"];
@@ -256,7 +230,7 @@ function TambahAset() {
       return;
     }
 
-    // Konfirmasi simpan
+    // Tampilkan popup konfirmasi sebelum menyimpan
     const confirm = await Swal.fire({
       title: "Konfirmasi Simpan",
       text: "Apakah Anda yakin ingin menyimpan data aset ini?",
@@ -275,16 +249,15 @@ function TambahAset() {
     setErrors({});
 
     try {
+      // Persiapan data Multipart (karena ada file gambar)
       const dataToSend = new FormData();
-      const hargaNumerik = formData.harga
-        ? formData.harga.replace(/\./g, "")
-        : "";
+      const hargaNumerik = formData.harga ? formData.harga.replace(/\./g, "") : "";
 
       Object.keys(formData).forEach((key) => {
         if (key === "harga") {
           dataToSend.append(key, hargaNumerik);
         } else if (key === "no_inventaris") {
-          // Skip, biarkan sistem generate otomatis
+          // Biarkan backend menangani jika diperlukan
         } else if (formData[key] !== null) {
           dataToSend.append(key, formData[key]);
         }
@@ -294,27 +267,20 @@ function TambahAset() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Langsung redirect ke halaman master aset
+      // Berhasil: arahkan kembali ke master aset
       navigate("/app/master-aset?action=created");
-      // Tampilkan alert success di halaman master aset
-      // Note: Alert ini akan ditampilkan di MasterAset component
-      // Kita perlu menggunakan approach yang berbeda untuk ini
     } catch (err) {
       console.error("❌ ERROR DETAIL:", err);
-
       let errorMessage = "Terjadi kesalahan tidak diketahui.";
 
       if (err.response) {
         const { status, data } = err.response;
-
         if (status === 422) {
           setErrors(data.errors || {});
           errorMessage = "Validasi gagal";
         } else {
           errorMessage = `Kesalahan server (${status})`;
         }
-      } else if (err.request) {
-        errorMessage = "Tidak ada respon dari server.";
       } else {
         errorMessage = `Terjadi error: ${err.message}`;
       }
@@ -329,6 +295,7 @@ function TambahAset() {
     }
   };
 
+  // --- RENDER COMPONENT ---
   return (
     <div className="master-main-content-fixed">
       <main className="master-main-content-fixed">
@@ -337,16 +304,12 @@ function TambahAset() {
             <h2>Tambah Aset</h2>
 
             <div className="form-grid">
-              {/* Upload Foto */}
+              {/* Field: Upload Foto */}
               <div className="form-group foto-group">
                 <label>
                   Foto Barang <span style={{ color: "red" }}>*</span>
                 </label>
-                <label
-                  className={`upload-box ${
-                    errors.fotoBorder ? "error-border" : ""
-                  }`}
-                >
+                <label className={`upload-box ${errors.fotoBorder ? "error-border" : ""}`}>
                   {preview ? (
                     <img src={preview} alt="Preview" className="preview-img" />
                   ) : (
@@ -363,23 +326,19 @@ function TambahAset() {
                     style={{ display: "none" }}
                   />
                 </label>
-                {errors.foto && (
-                  <span className="error-text">{errors.foto}</span>
-                )}
+                {errors.foto && <span className="error-text">{errors.foto}</span>}
                 <p className="hint">Max 5MB, PNG/JPG</p>
               </div>
 
-              {/* No Inventaris - DISABLE */}
+              {/* Field: No Inventaris (Read Only) */}
               <div className="form-group">
                 <label>
                   No Inventaris <span style={{ color: "red" }}>*</span>
-                </label>{" "}
+                </label>
                 <input
                   type="text"
                   name="no_inventaris"
-                  value={
-                    loadingNoInventaris ? "Loading..." : formData.no_inventaris
-                  }
+                  value={loadingNoInventaris ? "Loading..." : formData.no_inventaris}
                   onChange={handleChange}
                   disabled
                   className="disabled-input"
@@ -390,11 +349,11 @@ function TambahAset() {
                 </small>
               </div>
 
-              {/* Nama Barang */}
+              {/* Field: Nama Barang */}
               <div className="form-group">
                 <label>
                   Nama Barang <span style={{ color: "red" }}>*</span>
-                </label>{" "}
+                </label>
                 <input
                   type="text"
                   name="nama_barang"
@@ -402,16 +361,14 @@ function TambahAset() {
                   onChange={handleChange}
                   placeholder="Masukkan nama barang"
                 />
-                {errors.nama_barang && (
-                  <span className="error-text">{errors.nama_barang[0]}</span>
-                )}
+                {errors.nama_barang && <span className="error-text">{errors.nama_barang[0]}</span>}
               </div>
 
-              {/* Tipe */}
+              {/* Field: Tipe */}
               <div className="form-group">
                 <label>
                   Tipe <span style={{ color: "red" }}>*</span>
-                </label>{" "}
+                </label>
                 <input
                   type="text"
                   name="tipe"
@@ -419,26 +376,24 @@ function TambahAset() {
                   onChange={handleChange}
                   placeholder="Masukkan tipe barang"
                 />
-                {errors.tipe && (
-                  <span className="error-text">{errors.tipe[0]}</span>
-                )}
+                {errors.tipe && <span className="error-text">{errors.tipe[0]}</span>}
               </div>
 
-              {/* Kondisi */}
+              {/* Field: Kondisi (Default: Baik) */}
               <div className="form-group">
                 <label>
                   Kondisi <span style={{ color: "red" }}>*</span>
-                </label>{" "}
+                </label>
                 <select name="kondisi" value="Baik" disabled>
                   <option value="Baik">Baik</option>
                 </select>
               </div>
 
-              {/* Status */}
+              {/* Field: Status (Default: Tersedia) */}
               <div className="form-group">
                 <label>
                   Status <span style={{ color: "red" }}>*</span>
-                </label>{" "}
+                </label>
                 <select name="status" value={formData.status} disabled>
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s} disabled={s !== "Tersedia"}>
@@ -448,10 +403,10 @@ function TambahAset() {
                 </select>
               </div>
 
-              {/* Harga */}
+              {/* Field: Harga */}
               <div className="form-group">
                 <label>
-                  Harga <span style={{ color: "red" }}>*</span>{" "}
+                  Harga <span style={{ color: "red" }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -460,15 +415,11 @@ function TambahAset() {
                   onChange={handleChange}
                   placeholder="Contoh: 2.000.000"
                 />
-                <small className="input-hint">
-                  Format: 1.000.000 (otomatis terformat)
-                </small>
-                {errors.harga && (
-                  <span className="error-text">{errors.harga[0]}</span>
-                )}
+                <small className="input-hint">Format: 1.000.000 (otomatis terformat)</small>
+                {errors.harga && <span className="error-text">{errors.harga[0]}</span>}
               </div>
 
-              {/* Spesifikasi */}
+              {/* Field: Spesifikasi */}
               <div className="form-group full-width">
                 <label>Spesifikasi</label>
                 <textarea
@@ -480,7 +431,7 @@ function TambahAset() {
                 />
               </div>
 
-              {/* Keterangan */}
+              {/* Field: Keterangan */}
               <div className="form-group full-width">
                 <label>Keterangan</label>
                 <textarea
@@ -493,7 +444,7 @@ function TambahAset() {
               </div>
             </div>
 
-            {/* Actions */}
+            {/* Tombol Aksi */}
             <div className="form-actions">
               <button
                 type="button"
@@ -506,7 +457,7 @@ function TambahAset() {
               <button
                 type="button"
                 className="btn-save"
-                disabled={loading || loadingNoInventaris || !isFormValid} // 🔥 TAMBAH !isFormValid
+                disabled={loading || loadingNoInventaris || !isFormValid}
                 onClick={handleSubmit}
               >
                 {loading ? "Menyimpan..." : "Simpan Aset"}

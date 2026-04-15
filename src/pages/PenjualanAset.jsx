@@ -25,37 +25,39 @@ import "../styles/PenjualanAset.css";
 import dataTidakDitemukan from "../assets/data-tidak-ada.png";
 
 function PenjualanAset() {
+  // --- KONFIGURASI DAN STATE AWAL ---
   const API_URL = "/penjualan_asset";
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [dataPenjualan, setDataPenjualan] = useState([]);
-  const [allData, setAllData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  // State Utama untuk menyimpan data dari API
+  const [dataPenjualan, setDataPenjualan] = useState([]); // Data yang ditampilkan (bisa terfilter)
+  const [allData, setAllData] = useState([]);             // Backup data asli untuk pencarian/filter
+  const [loading, setLoading] = useState(true);           // Status loading proses fetch
+  const [error, setError] = useState(false);               // Status jika fetch gagal
+  const [searchQuery, setSearchQuery] = useState("");     // Input pencarian
 
-  // State untuk pagination
+  // State untuk kontrol Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // State untuk filter dropdown
+  // State untuk kontrol Filter Status (Dropdown)
   const [activeFilter, setActiveFilter] = useState("semua");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
+  // State untuk kontrol Modal Detail dan Histori
   const [selectedItem, setSelectedItem] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [historiPembayaran, setHistoriPembayaran] = useState([]);
   const [loadingHistori, setLoadingHistori] = useState(false);
 
-  // 🔥 EFFECT: Cek jika ada action success dari halaman tambah/edit
+  // --- EFFECT: HANDLING NOTIFIKASI DARI HALAMAN LAIN ---
   useEffect(() => {
-    // Cek URL parameters untuk action success
     const urlParams = new URLSearchParams(location.search);
     const action = urlParams.get("action");
 
+    // Menampilkan Alert Sukses berdasarkan parameter URL (setelah redirect dari Tambah/Edit)
     if (action === "created") {
-      // 🔥 TAMPILKAN ALERT UNTUK TAMBAH DATA
       Swal.fire({
         title: "Berhasil!",
         text: "Data penjualan berhasil disimpan.",
@@ -63,14 +65,9 @@ function PenjualanAset() {
         timer: 1500,
         showConfirmButton: false,
       });
-
-      // Refresh data
       fetchData();
-
-      // Hapus parameter dari URL
-      navigate("/app/penjualan-aset", { replace: true });
+      navigate("/app/penjualan-aset", { replace: true }); // Bersihkan parameter URL
     } else if (action === "updated") {
-      // 🔥 TAMPILKAN ALERT UNTUK EDIT DATA
       Swal.fire({
         title: "Berhasil!",
         text: "Data penjualan berhasil diperbarui.",
@@ -78,18 +75,14 @@ function PenjualanAset() {
         timer: 1500,
         showConfirmButton: false,
       });
-
-      // Refresh data
       fetchData();
-
-      // Hapus parameter dari URL
       navigate("/app/penjualan-aset", { replace: true });
     } else {
-      // Normal load data
-      fetchData();
+      fetchData(); // Load data biasa jika tidak ada aksi khusus
     }
   }, [location.search, navigate]);
 
+  // --- FUNGSI AMBIL DATA (FETCHING) ---
   const fetchData = () => {
     setLoading(true);
     setError(false);
@@ -100,17 +93,14 @@ function PenjualanAset() {
         const hasil = res.data.data || res.data || [];
         const dataArray = Array.isArray(hasil) ? hasil : [];
 
-        // 🔥 URUTKAN DATA BERDASARKAN YANG TERBARU (created_at/updated_at atau id descending)
+        // Logika Pengurutan: Data terbaru diletakkan paling atas
         const sortedData = dataArray.sort((a, b) => {
-          // Prioritaskan berdasarkan tanggal update terbaru jika ada
           if (a.updated_at && b.updated_at) {
             return new Date(b.updated_at) - new Date(a.updated_at);
           }
-          // Jika tidak ada updated_at, gunakan created_at
           if (a.created_at && b.created_at) {
             return new Date(b.created_at) - new Date(a.created_at);
           }
-          // Jika tidak ada timestamp, gunakan ID descending (asumsi ID auto increment)
           return (b.id_penjualan || b.id) - (a.id_penjualan || a.id);
         });
 
@@ -125,7 +115,7 @@ function PenjualanAset() {
       });
   };
 
-  // Fungsi filter data
+  // --- FUNGSI FILTER STATUS ---
   const applyFilter = (filterType) => {
     setActiveFilter(filterType);
     setCurrentPage(1);
@@ -138,48 +128,36 @@ function PenjualanAset() {
 
     const filteredData = allData.filter((item) => {
       const status = item.status?.toLowerCase() || "";
-
       switch (filterType) {
-        case "lunas":
-          return status === "lunas";
-        case "belum lunas":
-          return status === "belum lunas";
-        case "dibatalkan":
-          return status === "dibatalkan";
-        default:
-          return true;
+        case "lunas": return status === "lunas";
+        case "belum lunas": return status === "belum lunas";
+        case "dibatalkan": return status === "dibatalkan";
+        default: return true;
       }
     });
 
-    // 🔥 URUTKAN KEMBALI DATA YANG SUDAH DI-FILTER
+    // Urutkan kembali hasil filter
     const sortedFilteredData = filteredData.sort((a, b) => {
-      if (a.updated_at && b.updated_at) {
-        return new Date(b.updated_at) - new Date(a.updated_at);
-      }
-      if (a.created_at && b.created_at) {
-        return new Date(b.created_at) - new Date(a.created_at);
-      }
+      if (a.updated_at && b.updated_at) return new Date(b.updated_at) - new Date(a.updated_at);
+      if (a.created_at && b.created_at) return new Date(b.created_at) - new Date(a.created_at);
       return (b.id_penjualan || b.id) - (a.id_penjualan || a.id);
     });
 
     setDataPenjualan(sortedFilteredData);
-
-    setDataPenjualan(filteredData);
   };
 
-  // Fungsi pagination
+  // --- FUNGSI PAGINATION ---
   const paginate = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
     setCurrentPage(pageNumber);
   };
 
-  // Fungsi ubah items per page
   const handleItemsPerPageChange = (value) => {
     setItemsPerPage(parseInt(value));
     setCurrentPage(1);
   };
 
-  // Fungsi pencarian OTOMATIS
+  // --- EFFECT: PENCARIAN OTOMATIS (SEARCH) ---
   useEffect(() => {
     if (!searchQuery.trim()) {
       applyFilter(activeFilter);
@@ -191,25 +169,18 @@ function PenjualanAset() {
     let hasil = allData.filter((item) => {
       const namaBarang = (item.inventaris?.nama_barang || "").toLowerCase();
       const namaKaryawan = (item.karyawan?.nama || "").toLowerCase();
-      return (
-        namaBarang.includes(searchLower) || namaKaryawan.includes(searchLower)
-      );
+      return namaBarang.includes(searchLower) || namaKaryawan.includes(searchLower);
     });
 
-    // Apply filter tambahan pada hasil search
+    // Sinkronisasi hasil pencarian dengan filter status yang aktif
     if (activeFilter !== "semua") {
       hasil = hasil.filter((item) => {
         const status = item.status?.toLowerCase() || "";
-
         switch (activeFilter) {
-          case "lunas":
-            return status === "lunas";
-          case "belum lunas":
-            return status === "belum lunas";
-          case "dibatalkan":
-            return status === "dibatalkan";
-          default:
-            return true;
+          case "lunas": return status === "lunas";
+          case "belum lunas": return status === "belum lunas";
+          case "dibatalkan": return status === "dibatalkan";
+          default: return true;
         }
       });
     }
@@ -218,14 +189,13 @@ function PenjualanAset() {
     setCurrentPage(1);
   }, [searchQuery, allData, activeFilter]);
 
-  // Fungsi reset pencarian
   const handleResetSearch = () => {
     setSearchQuery("");
     applyFilter(activeFilter);
     setCurrentPage(1);
   };
 
-  // Fungsi ambil histori pembayaran
+  // --- FUNGSI AMBIL HISTORI PEMBAYARAN (DETAIL) ---
   const fetchHistoriPembayaran = async (idPenjualan) => {
     setLoadingHistori(true);
     try {
@@ -239,6 +209,7 @@ function PenjualanAset() {
     }
   };
 
+  // --- HELPER FORMATTING ---
   const formatDate = (tanggal) => {
     if (!tanggal) return "-";
     const date = new Date(tanggal);
@@ -250,40 +221,33 @@ function PenjualanAset() {
     return `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
   };
 
-  // Function untuk mendapatkan class status badge di tabel - PENJUALAN ASET
   const getStatusBadge = (status) => {
     if (!status) return "pa-status-badge";
-
     const statusLower = status.toLowerCase();
     if (statusLower === "lunas") return "pa-status-badge lunas";
     if (statusLower === "belum lunas") return "pa-status-badge belum-lunas";
     if (statusLower === "dibatalkan") return "pa-status-badge dibatalkan";
-
     return "pa-status-badge";
   };
 
-  // Fungsi buka detail dengan histori pembayaran
+  // --- FUNGSI MODAL DETAIL ---
   const handleViewDetail = async (item) => {
     setSelectedItem(item);
     setShowDetail(true);
-    document.body.style.overflow = "hidden";
-
-    // Ambil histori pembayaran
+    document.body.style.overflow = "hidden"; // Mencegah scroll pada background
     await fetchHistoriPembayaran(item.id_penjualan);
   };
 
-  // Fungsi tutup detail panel
   const handleCloseDetail = () => {
     setShowDetail(false);
     setHistoriPembayaran([]);
     document.body.style.overflow = "auto";
   };
 
-  // 🔥 FUNGSI HAPUS DENGAN SWEETALERT2 - SEMUA STATUS TAMPILKAN KONFIRMASI DULU
+  // --- FUNGSI DELETE DATA ---
   const handleDelete = async (item) => {
     const namaBarang = item.inventaris?.nama_barang || "Data Penjualan";
 
-    // 🔥 SEMUA STATUS TAMPILKAN KONFIRMASI HAPUS DULU
     const confirmResult = await Swal.fire({
       title: "Apakah Anda yakin?",
       html: `Data ${namaBarang} akan dihapus secara permanen!`,
@@ -298,7 +262,7 @@ function PenjualanAset() {
     if (!confirmResult.isConfirmed) return;
 
     try {
-      // 🔥 VALIDASI: Jika status "belum lunas", tampilkan error SETELAH konfirmasi
+      // Validasi bisnis: Status belum lunas tidak boleh dihapus
       if (item.status?.toLowerCase() === "belum lunas") {
         Swal.fire({
           title: "Gagal!",
@@ -310,7 +274,6 @@ function PenjualanAset() {
       }
 
       await mockApi.delete(`${API_URL}/${item.id_penjualan}`);
-
       Swal.fire({
         title: "Berhasil!",
         text: "Data berhasil dihapus.",
@@ -318,74 +281,56 @@ function PenjualanAset() {
         timer: 1500,
         showConfirmButton: false,
       });
-
-      // Refresh data
       fetchData();
     } catch (error) {
       console.error("Gagal menghapus data:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal Menghapus!",
-        text:
-          "Gagal menghapus data: " +
-          (error.response?.data?.message || error.message),
+        text: "Gagal menghapus data: " + (error.response?.data?.message || error.message),
         confirmButtonText: "OK",
       });
     }
   };
 
-  // Get display text untuk filter dropdown
+  // Label untuk tampilan filter
   const getFilterDisplayText = () => {
     switch (activeFilter) {
-      case "semua":
-        return "Semua Status";
-      case "lunas":
-        return "Lunas";
-      case "belum lunas":
-        return "Belum Lunas";
-      case "dibatalkan":
-        return "Dibatalkan";
-      default:
-        return "Semua Status";
+      case "semua": return "Semua Status";
+      case "lunas": return "Lunas";
+      case "belum lunas": return "Belum Lunas";
+      case "dibatalkan": return "Dibatalkan";
+      default: return "Semua Status";
     }
   };
 
-  // Pagination Calculations
+  // Kalkulasi data untuk pagination (Slicing array)
   const totalPages = Math.ceil(dataPenjualan.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentData = dataPenjualan.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Buat array angka halaman
   const pageNumbers = [];
   for (let i = 1; i <= totalPages; i++) {
     pageNumbers.push(i);
   }
 
-  // Fungsi untuk menampilkan state kosong
+  // --- RENDER COMPONENT: EMPTY STATE ---
   const renderEmptyState = () => {
     return (
       <div className="empty-state">
-        <img
-          src={dataTidakDitemukan}
-          alt="Data tidak ditemukan"
-          className="empty-state-image"
-        />
+        <img src={dataTidakDitemukan} alt="Data tidak ditemukan" className="empty-state-image" />
         <p className="empty-state-text">
-          {searchQuery
-            ? "Data tidak ditemukan"
-            : "Tidak ada data penjualan aset"}
+          {searchQuery ? "Data tidak ditemukan" : "Tidak ada data penjualan aset"}
         </p>
       </div>
     );
   };
 
+  // --- RETURN UI (JSX) ---
   return (
-    <div
-      className={`master-main-content-fixed ${showDetail ? "modal-open" : ""}`}
-    >
+    <div className={`master-main-content-fixed ${showDetail ? "modal-open" : ""}`}>
       <main className="master-main-content-fixed">
-        {/* Judul Halaman */}
         <div className="page-header">
           <h1>Penjualan Aset</h1>
         </div>
@@ -393,7 +338,7 @@ function PenjualanAset() {
         <section className="master-table-section-fixed">
           <div className="section-header">
             <div className="header-actions">
-              {/* Search Form - OTOMATIS */}
+              {/* Form Pencarian */}
               <div className="search-form-compact">
                 <div className="search-input-group-compact">
                   <FaSearch className="search-icon-compact" />
@@ -405,77 +350,30 @@ function PenjualanAset() {
                     className="search-input-compact"
                   />
                   {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={handleResetSearch}
-                      className="btn-reset-compact"
-                      title="Reset Pencarian"
-                    >
-                      ✕
-                    </button>
+                    <button type="button" onClick={handleResetSearch} className="btn-reset-compact">✕</button>
                   )}
                 </div>
               </div>
 
-              {/* Filter Dropdown */}
+              {/* Tombol Filter Dropdown */}
               <div className="filter-dropdown-container">
                 <div className="filter-dropdown">
-                  <button
-                    className="filter-dropdown-toggle"
-                    onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                  >
+                  <button className="filter-dropdown-toggle" onClick={() => setShowFilterDropdown(!showFilterDropdown)}>
                     <span>{getFilterDisplayText()}</span>
-                    <FaChevronDown
-                      className={`dropdown-arrow ${
-                        showFilterDropdown ? "rotate" : ""
-                      }`}
-                    />
+                    <FaChevronDown className={`dropdown-arrow ${showFilterDropdown ? "rotate" : ""}`} />
                   </button>
-
                   {showFilterDropdown && (
                     <div className="filter-dropdown-menu">
-                      <button
-                        className={`filter-dropdown-item ${
-                          activeFilter === "semua" ? "active" : ""
-                        }`}
-                        onClick={() => applyFilter("semua")}
-                      >
-                        Semua Status
-                      </button>
-                      <button
-                        className={`filter-dropdown-item ${
-                          activeFilter === "lunas" ? "active" : ""
-                        }`}
-                        onClick={() => applyFilter("lunas")}
-                      >
-                        Lunas
-                      </button>
-                      <button
-                        className={`filter-dropdown-item ${
-                          activeFilter === "belum lunas" ? "active" : ""
-                        }`}
-                        onClick={() => applyFilter("belum lunas")}
-                      >
-                        Belum Lunas
-                      </button>
-                      <button
-                        className={`filter-dropdown-item ${
-                          activeFilter === "dibatalkan" ? "active" : ""
-                        }`}
-                        onClick={() => applyFilter("dibatalkan")}
-                      >
-                        Dibatalkan
-                      </button>
+                      <button className={`filter-dropdown-item ${activeFilter === "semua" ? "active" : ""}`} onClick={() => applyFilter("semua")}>Semua Status</button>
+                      <button className={`filter-dropdown-item ${activeFilter === "lunas" ? "active" : ""}`} onClick={() => applyFilter("lunas")}>Lunas</button>
+                      <button className={`filter-dropdown-item ${activeFilter === "belum lunas" ? "active" : ""}`} onClick={() => applyFilter("belum lunas")}>Belum Lunas</button>
+                      <button className={`filter-dropdown-item ${activeFilter === "dibatalkan" ? "active" : ""}`} onClick={() => applyFilter("dibatalkan")}>Dibatalkan</button>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Tombol Tambah Data */}
-              <button
-                className="btn-tambah"
-                onClick={() => navigate("/app/penjualan-aset/tambah")}
-              >
+              <button className="btn-tambah" onClick={() => navigate("/app/penjualan-aset/tambah")}>
                 <FaPlus /> Tambah Data
               </button>
             </div>
@@ -483,23 +381,16 @@ function PenjualanAset() {
 
           <div className="table-container-fixed">
             {loading ? (
-              <div className="loading-state">
-                <p>Loading data...</p>
-              </div>
+              <div className="loading-state"><p>Loading data...</p></div>
             ) : error ? (
               <div className="error-state">
-                <img
-                  src={dataTidakDitemukan}
-                  alt="Error"
-                  className="empty-state-image"
-                />
-                <p className="empty-state-text">
-                  Gagal memuat data dari server
-                </p>
+                <img src={dataTidakDitemukan} alt="Error" className="empty-state-image" />
+                <p className="empty-state-text">Gagal memuat data dari server</p>
               </div>
             ) : currentData.length === 0 ? (
               renderEmptyState()
             ) : (
+              /* --- TABEL DATA PENJUALAN --- */
               <table className="table-fixed">
                 <thead>
                   <tr>
@@ -526,38 +417,14 @@ function PenjualanAset() {
                       <td>{formatCurrency(item.harga_jual)}</td>
                       <td>{formatCurrency(item.sisa)}</td>
                       <td>
-                        <span className={getStatusBadge(item.status)}>
-                          {item.status || "-"}
-                        </span>
+                        <span className={getStatusBadge(item.status)}>{item.status || "-"}</span>
                       </td>
                       <td>{formatDate(item.tanggal)}</td>
                       <td>
                         <div className="aksi-cell">
-                          <button
-                            className="aksi-btn view"
-                            title="Lihat Detail"
-                            onClick={() => handleViewDetail(item)}
-                          >
-                            <FaEye />
-                          </button>
-                          <button
-                            className="aksi-btn edit"
-                            title="Edit"
-                            onClick={() =>
-                              navigate(
-                                `/app/penjualan-aset/edit/${item.id_penjualan}`
-                              )
-                            }
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            className="aksi-btn delete"
-                            title="Hapus"
-                            onClick={() => handleDelete(item)}
-                          >
-                            <FaTrash />
-                          </button>
+                          <button className="aksi-btn view" title="Lihat Detail" onClick={() => handleViewDetail(item)}><FaEye /></button>
+                          <button className="aksi-btn edit" title="Edit" onClick={() => navigate(`/app/penjualan-aset/edit/${item.id_penjualan}`)}><FaEdit /></button>
+                          <button className="aksi-btn delete" title="Hapus" onClick={() => handleDelete(item)}><FaTrash /></button>
                         </div>
                       </td>
                     </tr>
@@ -567,169 +434,86 @@ function PenjualanAset() {
             )}
           </div>
 
-          {/* Pagination - Row Page di Kiri, Pagination di Kanan */}
+          {/* --- PAGINATION UI --- */}
           {!loading && dataPenjualan.length > 0 && (
             <div className="pagination-container">
-              {/* Row Page Selection - Kiri */}
               <div className="row-page-selection">
                 <span className="row-page-label">Rows per page:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => handleItemsPerPageChange(e.target.value)}
-                  className="row-page-select"
-                >
+                <select value={itemsPerPage} onChange={(e) => handleItemsPerPageChange(e.target.value)} className="row-page-select">
                   <option value={10}>10</option>
                   <option value={25}>25</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
                 <span className="row-page-info">
-                  Showing {indexOfFirstItem + 1} to{" "}
-                  {Math.min(indexOfLastItem, dataPenjualan.length)} of{" "}
-                  {dataPenjualan.length} entries
+                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, dataPenjualan.length)} of {dataPenjualan.length} entries
                 </span>
               </div>
 
-              {/* Pagination Controls - Kanan */}
               <div className="pagination-controls">
-                <button
-                  onClick={() => paginate(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="pagination-btn"
-                >
-                  &lt;
-                </button>
-
+                <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="pagination-btn">&lt;</button>
                 {pageNumbers.map((number) => (
-                  <button
-                    key={number}
-                    onClick={() => paginate(number)}
-                    className={`pagination-btn ${
-                      currentPage === number ? "active" : ""
-                    }`}
-                  >
-                    {number}
-                  </button>
+                  <button key={number} onClick={() => paginate(number)} className={`pagination-btn ${currentPage === number ? "active" : ""}`}>{number}</button>
                 ))}
-
-                <button
-                  onClick={() => paginate(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="pagination-btn"
-                >
-                  &gt;
-                </button>
+                <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-btn">&gt;</button>
               </div>
             </div>
           )}
         </section>
       </main>
 
-      {/* Detail Modal - Styling sama dengan Inventaris */}
+      {/* --- MODAL DETAIL DAN HISTORI PEMBAYARAN --- */}
       {showDetail && (
         <>
           <div className="blur-overlay"></div>
           <div className="detail-modal-fullscreen">
             <div className="detail-modal-header">
-              <h2>
-                Detail Penjualan Aset -{" "}
-                {selectedItem?.inventaris?.nama_barang || "Penjualan"}
-              </h2>
-              <button className="close-btn" onClick={handleCloseDetail}>
-                ✖
-              </button>
+              <h2>Detail Penjualan Aset - {selectedItem?.inventaris?.nama_barang || "Penjualan"}</h2>
+              <button className="close-btn" onClick={handleCloseDetail}>✖</button>
             </div>
 
             <div className="detail-modal-content-improved">
-              {/* 🔥 Sisi Kiri - Informasi Penjualan */}
+              {/* Sisi Kiri: Detail Data */}
               <div className="detail-info-side">
                 <div className="detail-info-card">
                   <h3>📋 Informasi Penjualan</h3>
-
                   <div className="detail-basic-info">
                     <div className="detail-name-section">
-                      <h4 className="detail-name-improved">
-                        {selectedItem?.inventaris?.nama_barang || "-"}
-                      </h4>
+                      <h4 className="detail-name-improved">{selectedItem?.inventaris?.nama_barang || "-"}</h4>
                       <div className="detail-no-inventaris-improved">
-                        <span className="no-inventaris-badge">
-                          🏷️ Penjualan #{selectedItem?.id_penjualan || "-"}
-                        </span>
+                        <span className="no-inventaris-badge">🏷️ Penjualan #{selectedItem?.id_penjualan || "-"}</span>
                       </div>
                     </div>
-
                     <div className="status-kondisi-container">
                       <div className="status-section">
                         <label>Status:</label>
-                        <span className={getStatusBadge(selectedItem?.status)}>
-                          {selectedItem?.status || "-"}
-                        </span>
+                        <span className={getStatusBadge(selectedItem?.status)}>{selectedItem?.status || "-"}</span>
                       </div>
                       <div className="kondisi-section">
                         <label>Tanggal:</label>
-                        <span className="info-value">
-                          {formatDate(selectedItem?.tanggal)}
-                        </span>
+                        <span className="info-value">{formatDate(selectedItem?.tanggal)}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="detail-info-grid">
-                    <div className="info-item">
-                      <span className="info-label">Nama Barang:</span>
-                      <span className="info-value">
-                        {selectedItem?.inventaris?.nama_barang || "-"}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Nama Karyawan:</span>
-                      <span className="info-value">
-                        {selectedItem?.karyawan?.nama || "-"}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Metode Pembayaran:</span>
-                      <span className="info-value">
-                        {selectedItem?.metode_pembayaran || "-"}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Harga Jual:</span>
-                      <span className="info-value price">
-                        {formatCurrency(selectedItem?.harga_jual)}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Jumlah Terbayar:</span>
-                      <span className="info-value price">
-                        {formatCurrency(selectedItem?.jumlah_terbayar)}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Sisa:</span>
-                      <span className="info-value price">
-                        {formatCurrency(selectedItem?.sisa)}
-                      </span>
-                    </div>
-                    <div className="info-item full-width">
-                      <span className="info-label">Keterangan:</span>
-                      <span className="info-value">
-                        {selectedItem?.keterangan || "-"}
-                      </span>
-                    </div>
+                    <div className="info-item"><span className="info-label">Nama Barang:</span><span className="info-value">{selectedItem?.inventaris?.nama_barang || "-"}</span></div>
+                    <div className="info-item"><span className="info-label">Nama Karyawan:</span><span className="info-value">{selectedItem?.karyawan?.nama || "-"}</span></div>
+                    <div className="info-item"><span className="info-label">Metode Pembayaran:</span><span className="info-value">{selectedItem?.metode_pembayaran || "-"}</span></div>
+                    <div className="info-item"><span className="info-label">Harga Jual:</span><span className="info-value price">{formatCurrency(selectedItem?.harga_jual)}</span></div>
+                    <div className="info-item"><span className="info-label">Jumlah Terbayar:</span><span className="info-value price">{formatCurrency(selectedItem?.jumlah_terbayar)}</span></div>
+                    <div className="info-item"><span className="info-label">Sisa:</span><span className="info-value price">{formatCurrency(selectedItem?.sisa)}</span></div>
+                    <div className="info-item full-width"><span className="info-label">Keterangan:</span><span className="info-value">{selectedItem?.keterangan || "-"}</span></div>
                   </div>
                 </div>
               </div>
 
-              {/* 🔥 Sisi Kanan - Histori Pembayaran */}
+              {/* Sisi Kanan: Tabel Histori Pembayaran */}
               <div className="histori-side">
                 <div className="histori-card">
                   <h3>📊 Histori Pembayaran</h3>
-
                   {loadingHistori ? (
-                    <div className="loading-histori">
-                      <p>Memuat data histori...</p>
-                    </div>
+                    <div className="loading-histori"><p>Memuat data histori...</p></div>
                   ) : historiPembayaran && historiPembayaran.length > 0 ? (
                     <>
                       <div className="histori-table-container-fixed">
@@ -748,53 +532,23 @@ function PenjualanAset() {
                               <tr key={histori.id_histori || index}>
                                 <td className="text-center">{index + 1}</td>
                                 <td>{formatDate(histori.tanggal_bayar)}</td>
-                                <td className="price">
-                                  {formatCurrency(histori.jumlah_bayar)}
-                                </td>
-                                <td>
-                                  <span className="metode-badge">
-                                    {histori.metode_pembayaran}
-                                  </span>
-                                </td>
-                                <td className="keterangan-cell">
-                                  {histori.keterangan || "-"}
-                                </td>
+                                <td className="price">{formatCurrency(histori.jumlah_bayar)}</td>
+                                <td><span className="metode-badge">{histori.metode_pembayaran}</span></td>
+                                <td className="keterangan-cell">{histori.keterangan || "-"}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
-
-                      {/* Total Pembayaran */}
-                      <div
-                        className="pagination-histori-info"
-                        style={{
-                          textAlign: "center",
-                          padding: "15px 0",
-                          borderTop: "1px solid #e9ecef",
-                          marginTop: "auto",
-                          fontWeight: "600",
-                          color: "#1e63b4",
-                        }}
-                      >
+                      <div className="pagination-histori-info" style={{ textAlign: "center", padding: "15px 0", borderTop: "1px solid #e9ecef", marginTop: "auto", fontWeight: "600", color: "#1e63b4" }}>
                         <span>Total Dibayar: </span>
                         <span className="total-price">
-                          {formatCurrency(
-                            historiPembayaran.reduce(
-                              (total, histori) =>
-                                total + parseFloat(histori.jumlah_bayar || 0),
-                              0
-                            )
-                          )}
+                          {formatCurrency(historiPembayaran.reduce((total, histori) => total + parseFloat(histori.jumlah_bayar || 0), 0))}
                         </span>
                       </div>
                     </>
                   ) : (
-                    <div className="empty-histori">
-                      <p>
-                        📝 Tidak ada histori pembayaran untuk penjualan ini.
-                      </p>
-                    </div>
+                    <div className="empty-histori"><p>📝 Tidak ada histori pembayaran untuk penjualan ini.</p></div>
                   )}
                 </div>
               </div>

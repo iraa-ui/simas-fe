@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isLoginLoading, setIsLoginLoading] = useState(false);
 
-  // Check if user is logged in on app start
+  // Cek status login pas aplikasi pertama kali di-load
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("authToken");
@@ -26,26 +26,29 @@ export const AuthProvider = ({ children }) => {
         currentPath: location.pathname,
       });
 
+      // Kalau data di storage lengkap, coba validasi ke server
       if (token && refreshToken && savedUser) {
         try {
-          const response = await authService.getCurrentUser();
+          await authService.getCurrentUser();
 
           const userData = JSON.parse(savedUser);
           setUser(userData);
           console.log("✅ User authenticated from localStorage");
 
+          // Kalau udah login tapi iseng buka page login/register, balikin ke dashboard
           if (["/login", "/register"].includes(location.pathname)) {
             navigate("/app/dashboard", { replace: true });
           }
         } catch (error) {
           console.error("❌ User validation failed:", error);
 
-          // ✅ JIKA USER TIDAK VALID, LOGOUT OTOMATIS
+          // Jaga-jaga kalau token nggak valid (expired/tampered), langsung clear semua
           localStorage.removeItem("authToken");
           localStorage.removeItem("refreshToken");
           localStorage.removeItem("user");
           setUser(null);
 
+          // Kalau gagal pas lagi di dalem menu /app, lempar ke login
           if (location.pathname.startsWith("/app")) {
             navigate("/login", { replace: true });
           }
@@ -53,6 +56,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         console.log("ℹ️ User not authenticated");
 
+        // Tendang ke login kalau coba-coba akses menu internal tanpa auth
         if (location.pathname.startsWith("/app")) {
           navigate("/login", { replace: true });
         }
@@ -63,12 +67,12 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [location.pathname, navigate]);
 
-  // GANTI periodic validation dengan yang lebih efisien:
+  // Validasi user tiap 5 menit buat mastiin session masih idup
   useEffect(() => {
     let isMounted = true;
 
     const checkUserValidity = async () => {
-      if (!isMounted || !user) return; // ✅ Skip jika tidak ada user
+      if (!isMounted || !user) return; 
 
       try {
         await authService.getCurrentUser();
@@ -76,12 +80,12 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error("❌ Periodic user validation failed:", error);
         if (isMounted) {
-          // Handle error
+          // Tambahin logic handle error di sini kalau perlu
         }
       }
     };
 
-    // Hanya setup interval jika user ada
+    // Setting interval cuma kalau usernya lagi login aja
     if (user) {
       const interval = setInterval(checkUserValidity, 5 * 60 * 1000);
       return () => {
@@ -89,10 +93,9 @@ export const AuthProvider = ({ children }) => {
         clearInterval(interval);
       };
     }
-  }, [user]); // ✅ Hanya depend on user
+  }, [user]);
 
-  // Auto refresh token mechanism - 60 MENIT
-  // Di AuthProvider.jsx - PERBAIKI timing auto refresh
+  // Auto refresh token tiap 55 menit (sebelum token utama mati di menit 60)
   useEffect(() => {
     let refreshInterval;
 
@@ -101,7 +104,6 @@ export const AuthProvider = ({ children }) => {
 
       console.log("⏰ Setting up auto refresh in 55 minutes...");
 
-      // ✅ PERBAIKAN: Refresh 5 menit sebelum expired (55 menit)
       refreshInterval = setInterval(async () => {
         try {
           console.log("🔄 Auto refreshing token...");
@@ -109,13 +111,12 @@ export const AuthProvider = ({ children }) => {
           console.log("✅ Token refreshed successfully");
         } catch (error) {
           console.error("❌ Auto refresh failed:", error);
-          logout();
+          logout(); // Kalau gagal refresh, mending force logout buat keamanan
         }
-      }, 55 * 60 * 1000); // 55 menit
+      }, 55 * 60 * 1000); 
     };
 
     if (user) {
-      // Setup auto refresh setelah 55 menit
       setupAutoRefresh();
 
       return () => {
@@ -124,8 +125,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  // LOGIN - PERBAIKAN BESAR: JANGAN redirect jika error
-  // LOGIN - PERBAIKAN: Throw error agar bisa ditangkap di component
+  // Handle proses login
   const login = async (credentials) => {
     setIsLoginLoading(true);
     try {
@@ -136,26 +136,26 @@ export const AuthProvider = ({ children }) => {
 
       console.log("✅ AuthProvider: Login successful");
 
-      // ✅ HANYA redirect jika login BERHASIL
+      // Cuma pindah page kalau login beneran tembus
       navigate("/app/dashboard", { replace: true });
       return { success: true };
     } catch (error) {
       console.error("❌ AuthProvider: Login failed", error);
-
-      // ✅ THROW error agar bisa ditangkap di component Login
-      throw error; // TAMBAHKAN INI
+      // Lempar error ke component (Login.jsx) biar bisa munculin notif error di UI
+      throw error; 
     } finally {
       setIsLoginLoading(false);
     }
   };
 
-  // LOGOUT
+  // Bersih-bersih data pas user logout
   const logout = async () => {
     try {
       await authService.logout();
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
+      // Apapun yang terjadi (API error atau nggak), storage harus bersih dan balik ke login
       setUser(null);
       localStorage.removeItem("authToken");
       localStorage.removeItem("refreshToken");
@@ -175,6 +175,7 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// Hook biar gampang panggil data auth di component lain
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -183,7 +184,7 @@ export const useAuth = () => {
   return context;
 };
 
-// TAMBAHKAN fungsi validasi email di authService.js
+// Helper buat cek format email
 export const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);

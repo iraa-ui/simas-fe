@@ -45,11 +45,10 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import "../styles/Dashboard.css";
 import "../styles/fix-dashboard-layout.css";
 
-// ===== Configuration =====
-// API_URL dihapus - sudah pakai mockApi
+//  Configuration 
 const COLORS = ["#60A5FA", "#93C5FD", "#FCA5A5"];
 
-// ===== Components =====
+//  Components 
 const StatCard = ({ title, value, icon, loading, subtitle }) => (
   <Card className="stat-card">
     <CardContent>
@@ -123,16 +122,16 @@ const PieChartCard = ({ data, loading }) => (
   </PanelCard>
 );
 
-// ===== Main Component =====
+//  Main Component 
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
 
-    // TAMBAHKAN useEffect untuk mengatur body class
+   
   useEffect(() => {
-    // Tambahkan class ke body
+    
     document.body.classList.add('dashboard-page');
     
     // Cleanup: hapus class saat komponen unmount

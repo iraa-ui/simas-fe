@@ -6,53 +6,57 @@ import "../styles/TambahEditStokBarang.css";
 import Swal from "sweetalert2";
 
 function TambahStokBarang() {
+  // --- Definisi Konstanta API & Hooks ---
   const API_URL = "/stok_barang";
-  const HISTORY_API_URL =
-    "/histori-stok";
+  const HISTORY_API_URL = "/histori-stok";
   const navigate = useNavigate();
 
+  // --- State Management ---
+  // State utama untuk menampung seluruh data form
   const [formData, setFormData] = useState({
     nama_barang: "",
     kuantitas: "",
     kategori: "",
     total_harga: "",
     harga: "",
-    tanggal_transaksi: new Date().toISOString().split("T")[0],
+    tanggal_transaksi: new Date().toISOString().split("T")[0], // Default ke tanggal hari ini
     dibayar_oleh: "",
     notes: "",
     tipe: "masuk",
   });
 
-  const [kategoriLainnya, setKategoriLainnya] = useState("");
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [kategoriLainnya, setKategoriLainnya] = useState(""); // State khusus untuk input kategori manual
+  const [errors, setErrors] = useState({}); // State untuk menampung pesan error validasi
+  const [loading, setLoading] = useState(false); // State status loading saat proses simpan
 
-  // currency display
+  // State khusus untuk tampilan mata uang agar ada pemisah ribuan (titik)
   const [displayTotalHarga, setDisplayTotalHarga] = useState("");
 
-  // Tambahkan fungsi ini di dalam component TambahStokBarang
+  // --- Fungsi Helper & Handler ---
+  
+  // Mematikan perubahan angka via scroll wheel pada input type number
   const handleWheel = (e) => {
-    e.target.blur(); // 🔥 Nonaktifkan scroll wheel behavior
+    e.target.blur();
   };
 
-  // Atau alternatif: prevent default behavior
   const preventScroll = (e) => {
     e.preventDefault();
   };
 
-  // currency format (10.000)
+  // Mengubah angka menjadi format ribuan Indonesia (contoh: 10000 -> 10.000)
   const formatToCurrency = (value) => {
     const numericValue = value.replace(/\D/g, "");
     if (!numericValue) return "";
     return new Intl.NumberFormat("id-ID").format(Number(numericValue));
   };
 
+  // Menghilangkan titik dari format ribuan agar kembali menjadi angka murni
   const parseCurrencyToNumber = (currencyString) => {
     return currencyString.replace(/\./g, "");
   };
 
+  // Pengecekan apakah form sudah layak untuk disubmit (untuk aktivasi tombol)
   const isFormValid = () => {
-    // 1. CHECK SEMUA FIELD WAJIB TERISI
     const requiredFieldsValid =
       formData.nama_barang.trim() &&
       formData.kuantitas &&
@@ -64,14 +68,13 @@ function TambahStokBarang() {
       formData.tanggal_transaksi &&
       formData.dibayar_oleh.trim();
 
-    // 2. CHECK TIDAK ADA ERRORS DI FORM
     const noErrors = Object.keys(errors).every((key) => errors[key] === "");
 
-    // 3. KEDUA KONDISI HARUS TERPENUHI
     return requiredFieldsValid && noErrors;
   };
 
-  // AUTO CALCULATE: harga = total_harga / kuantitas
+  // --- useEffect: Kalkulasi Otomatis ---
+  // Menghitung harga satuan setiap kali kuantitas atau total harga berubah
   useEffect(() => {
     const kuantitas = parseFloat(formData.kuantitas) || 0;
     const totalHarga = parseFloat(formData.total_harga) || 0;
@@ -87,25 +90,26 @@ function TambahStokBarang() {
     }));
   }, [formData.kuantitas, formData.total_harga]);
 
+  // --- Event Handlers ---
+  
+  // Menangani setiap perubahan pada field input
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Logika khusus jika field yang berubah adalah 'kategori'
     if (name === "kategori") {
       setFormData((prev) => ({
         ...prev,
         kategori: value,
       }));
 
-      // 🔥 PERBAIKAN: Clear error kategori ketika diubah
       if (errors.kategori) {
-        setErrors((prev) => ({
-          ...prev,
-          kategori: "",
-        }));
+        setErrors((prev) => ({ ...prev, kategori: "" }));
       }
       return;
     }
 
+    // Logika khusus jika field yang berubah adalah 'total_harga' (format currency)
     if (name === "total_harga") {
       const formattedValue = formatToCurrency(value);
       setDisplayTotalHarga(formattedValue);
@@ -118,11 +122,13 @@ function TambahStokBarang() {
       return;
     }
 
+    // Update state general untuk field lainnya
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
+    // Menghapus pesan error saat user mulai memperbaiki input
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -131,6 +137,7 @@ function TambahStokBarang() {
     }
   };
 
+  // Fungsi validasi manual sebelum submit
   const validateForm = () => {
     const newErrors = {};
 
@@ -166,13 +173,14 @@ function TambahStokBarang() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // --- Submit Handler ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (loading) return;
-
     if (!validateForm()) return;
 
+    // Konfirmasi via SweetAlert sebelum menyimpan
     const confirmResult = await Swal.fire({
       title: "Simpan Data Barang?",
       text: "Apakah Anda yakin ingin menyimpan data barang baru ini?",
@@ -184,18 +192,15 @@ function TambahStokBarang() {
       cancelButtonText: "Batal",
     });
 
-    if (!confirmResult.isConfirmed) {
-      return;
-    }
+    if (!confirmResult.isConfirmed) return;
 
     setLoading(true);
 
     try {
-      // 1. PAYLOAD UNTUK CREATE BARANG
+      // Menyiapkan payload data dengan konversi tipe data yang sesuai
       const stokPayload = {
         ...formData,
-        kategori:
-          formData.kategori === "Lainnya" ? kategoriLainnya : formData.kategori,
+        kategori: formData.kategori === "Lainnya" ? kategoriLainnya : formData.kategori,
         kuantitas: parseInt(formData.kuantitas),
         total_harga: parseFloat(formData.total_harga),
         harga: parseFloat(formData.harga),
@@ -203,22 +208,22 @@ function TambahStokBarang() {
 
       console.log("🔵 Stok payload:", stokPayload);
 
-      // 2. CREATE BARANG BARU
+      // Kirim data ke server (POST)
       const response = await mockApi.post(API_URL, stokPayload);
       console.log("✅ Barang created:", response.data);
 
       const newItemId = response.data.data?.id_barang;
 
-      // 3. NAVIGATE KE LIST
+      // Navigasi kembali ke daftar stok dengan parameter sukses
       console.log("🟢 Navigating to list...");
       navigate("/app/stokbarang?action=created&itemId=" + newItemId);
     } catch (error) {
       console.error("❌ Error creating item:", error);
 
+      // Handling error response dari server (validasi backend)
       if (error.response?.data?.errors) {
         const validationErrors = error.response.data.errors;
 
-        // 🔥 PERBAIKAN: Handle error validasi kategori
         if (validationErrors.kategori) {
           setErrors((prev) => ({
             ...prev,
@@ -226,14 +231,12 @@ function TambahStokBarang() {
           }));
         }
 
-        // Handle error unique nama barang
         if (validationErrors.nama_barang) {
           setErrors((prev) => ({
             ...prev,
             nama_barang: "Nama barang sudah tersedia",
           }));
         } else {
-          // Tampilkan error validasi lainnya
           let errorMessage = "Validasi gagal:\n";
           Object.keys(validationErrors).forEach((key) => {
             errorMessage += `- ${key}: ${validationErrors[key].join(", ")}\n`;
@@ -241,25 +244,15 @@ function TambahStokBarang() {
           alert(errorMessage);
         }
       } else if (error.response?.status === 422) {
-        // Handle Laravel validation error
         const errorData = error.response.data;
         if (errorData.errors?.nama_barang) {
-          setErrors((prev) => ({
-            ...prev,
-            nama_barang: "Nama barang sudah tersedia",
-          }));
+          setErrors((prev) => ({ ...prev, nama_barang: "Nama barang sudah tersedia" }));
         }
         if (errorData.errors?.kategori) {
-          setErrors((prev) => ({
-            ...prev,
-            kategori: errorData.errors.kategori.join(", "),
-          }));
+          setErrors((prev) => ({ ...prev, kategori: errorData.errors.kategori.join(", ") }));
         }
       } else {
-        alert(
-          "Gagal menambah stock: " +
-            (error.response?.data?.message || "Network error")
-        );
+        alert("Gagal menambah stock: " + (error.response?.data?.message || "Network error"));
       }
     } finally {
       setLoading(false);
@@ -270,6 +263,7 @@ function TambahStokBarang() {
     navigate("/app/stokbarang");
   };
 
+  // Opsi pilihan untuk dropdown kategori
   const kategoriOptions = [
     { value: "", label: "Pilih Kategori" },
     { value: "ATK", label: "ATK" },
@@ -280,6 +274,7 @@ function TambahStokBarang() {
     { value: "Lainnya", label: "Lainnya" },
   ];
 
+  // --- Render UI ---
   return (
     <div className="master-main-content-fixed">
       <main className="master-main-content-fixed">
@@ -290,9 +285,7 @@ function TambahStokBarang() {
                 <FaPlus style={{ marginRight: "10px" }} />
                 Tambah Barang Baru
               </h2>
-              <p>
-                Isi form berikut untuk menambahkan data barang baru ke sistem
-              </p>
+              <p>Isi form berikut untuk menambahkan data barang baru ke sistem</p>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -301,9 +294,7 @@ function TambahStokBarang() {
                 <h3>Data Master Barang</h3>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label htmlFor="nama_barang" className="required">
-                      Nama Barang
-                    </label>
+                    <label htmlFor="nama_barang" className="required">Nama Barang</label>
                     <input
                       type="text"
                       id="nama_barang"
@@ -314,15 +305,11 @@ function TambahStokBarang() {
                       placeholder="Masukkan nama barang"
                       disabled={loading}
                     />
-                    {errors.nama_barang && (
-                      <span className="error-text">{errors.nama_barang}</span>
-                    )}
+                    {errors.nama_barang && <span className="error-text">{errors.nama_barang}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="kategori" className="required">
-                      Kategori
-                    </label>
+                    <label htmlFor="kategori" className="required">Kategori</label>
                     <select
                       id="kategori"
                       name="kategori"
@@ -338,7 +325,7 @@ function TambahStokBarang() {
                       ))}
                     </select>
 
-                    {/* 🔥 PERBAIKAN: Tambahkan error styling pada input lainnya */}
+                    {/* Input tambahan jika user memilih kategori 'Lainnya' */}
                     {formData.kategori === "Lainnya" && (
                       <input
                         type="text"
@@ -346,25 +333,17 @@ function TambahStokBarang() {
                         value={kategoriLainnya}
                         onChange={(e) => {
                           setKategoriLainnya(e.target.value);
-                          // 🔥 PERBAIKAN: Clear error ketika user mulai mengetik
                           if (errors.kategori) {
-                            setErrors((prev) => ({
-                              ...prev,
-                              kategori: "",
-                            }));
+                            setErrors((prev) => ({ ...prev, kategori: "" }));
                           }
                         }}
-                        className={`input-lainnya ${
-                          errors.kategori ? "error-input" : ""
-                        }`} // 🔥 Tambahkan error styling
+                        className={`input-lainnya ${errors.kategori ? "error-input" : ""}`}
                         style={{ marginTop: "8px" }}
                         disabled={loading}
                       />
                     )}
 
-                    {errors.kategori && (
-                      <span className="error-text">{errors.kategori}</span>
-                    )}
+                    {errors.kategori && <span className="error-text">{errors.kategori}</span>}
                   </div>
                 </div>
               </div>
@@ -374,31 +353,25 @@ function TambahStokBarang() {
                 <h3>Transaksi Pertama</h3>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label htmlFor="kuantitas" className="required">
-                      Jumlah Barang
-                    </label>
+                    <label htmlFor="kuantitas" className="required">Jumlah Barang</label>
                     <input
                       type="number"
                       id="kuantitas"
                       name="kuantitas"
                       value={formData.kuantitas}
                       onChange={handleChange}
-                      onWheel={handleWheel} // 🔥 TAMBAHKAN INI
+                      onWheel={handleWheel}
                       className={errors.kuantitas ? "error-input" : ""}
                       placeholder="0"
                       min="1"
                       disabled={loading}
                     />
-                    {errors.kuantitas && (
-                      <span className="error-text">{errors.kuantitas}</span>
-                    )}
+                    {errors.kuantitas && <span className="error-text">{errors.kuantitas}</span>}
                     <span className="input-hint">Jumlah unit yang masuk</span>
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="total_harga" className="required">
-                      Total Harga (Rp)
-                    </label>
+                    <label htmlFor="total_harga" className="required">Total Harga (Rp)</label>
                     <div className="input-with-prefix">
                       <input
                         type="text"
@@ -411,12 +384,8 @@ function TambahStokBarang() {
                         disabled={loading}
                       />
                     </div>
-                    {errors.total_harga && (
-                      <span className="error-text">{errors.total_harga}</span>
-                    )}
-                    <span className="input-hint">
-                      Total yang dibayar ke supplier
-                    </span>
+                    {errors.total_harga && <span className="error-text">{errors.total_harga}</span>}
+                    <span className="input-hint">Total yang dibayar ke supplier</span>
                   </div>
 
                   <div className="form-group">
@@ -428,9 +397,7 @@ function TambahStokBarang() {
                         name="harga"
                         value={
                           formData.harga
-                            ? new Intl.NumberFormat("id-ID").format(
-                                formData.harga
-                              )
+                            ? new Intl.NumberFormat("id-ID").format(formData.harga)
                             : ""
                         }
                         readOnly
@@ -452,9 +419,7 @@ function TambahStokBarang() {
                 <h3>Informasi Transaksi</h3>
                 <div className="form-grid">
                   <div className="form-group">
-                    <label htmlFor="tanggal_transaksi" className="required">
-                      Tanggal Transaksi
-                    </label>
+                    <label htmlFor="tanggal_transaksi" className="required">Tanggal Transaksi</label>
                     <input
                       type="date"
                       id="tanggal_transaksi"
@@ -464,17 +429,11 @@ function TambahStokBarang() {
                       className={errors.tanggal_transaksi ? "error-input" : ""}
                       disabled={loading}
                     />
-                    {errors.tanggal_transaksi && (
-                      <span className="error-text">
-                        {errors.tanggal_transaksi}
-                      </span>
-                    )}
+                    {errors.tanggal_transaksi && <span className="error-text">{errors.tanggal_transaksi}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="dibayar_oleh" className="required">
-                      Dibayar Oleh
-                    </label>
+                    <label htmlFor="dibayar_oleh" className="required">Dibayar Oleh</label>
                     <input
                       type="text"
                       id="dibayar_oleh"
@@ -485,9 +444,7 @@ function TambahStokBarang() {
                       placeholder="Nama pembayar / departemen"
                       disabled={loading}
                     />
-                    {errors.dibayar_oleh && (
-                      <span className="error-text">{errors.dibayar_oleh}</span>
-                    )}
+                    {errors.dibayar_oleh && <span className="error-text">{errors.dibayar_oleh}</span>}
                     <span className="input-hint">Nama individu/Departemen</span>
                   </div>
                 </div>
@@ -508,9 +465,7 @@ function TambahStokBarang() {
                       placeholder="Masukkan catatan tambahan mengenai barang atau transaksi (opsional)"
                       disabled={loading}
                     />
-                    <span className="input-hint">
-                      Contoh: Supplier, nomor PO, kondisi barang, dll.
-                    </span>
+                    <span className="input-hint">Contoh: Supplier, nomor PO, kondisi barang, dll.</span>
                   </div>
                 </div>
               </div>

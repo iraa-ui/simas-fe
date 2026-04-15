@@ -2,21 +2,24 @@
 import React, { useState, useEffect } from "react";
 import mockApi from "../api/mockApi";
 import { useNavigate } from "react-router-dom";
-import Select from "react-select";
-import Swal from "sweetalert2";
+import Select from "react-select"; // Import library untuk dropdown pencarian
+import Swal from "sweetalert2"; // Import library untuk notifikasi popup
 import "../styles/TambahEditPenjualanAset.css";
 
 function TambahPenjualanAset() {
+  // Definisi endpoint API yang digunakan
   const API_BARANG = "/inventaris";
   const API_KARYAWAN = "/karyawans";
-  const API_PENJUALAN =
-    "/penjualan_asset";
+  const API_PENJUALAN = "/penjualan_asset";
 
   const navigate = useNavigate();
 
+  // State untuk menampung data mentah dari API
   const [barangList, setBarangList] = useState([]);
   const [karyawanList, setKaryawanList] = useState([]);
   const [selectedBarang, setSelectedBarang] = useState(null);
+
+  // State utama untuk menampung data form input user
   const [formData, setFormData] = useState({
     id_karyawan: "",
     id_inventaris: "",
@@ -31,13 +34,14 @@ function TambahPenjualanAset() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // State untuk react-select options
+  // State khusus untuk menampung opsi yang akan ditampilkan di React-Select
   const [karyawanOptions, setKaryawanOptions] = useState([]);
   const [barangOptions, setBarangOptions] = useState([]);
 
+  // State untuk mengontrol status aktif/non-aktif tombol simpan
   const [isFormValid, setIsFormValid] = useState(false);
 
-  // Fungsi yang lebih sederhana dan reliable
+  // Fungsi validasi form untuk mengecek kelengkapan data sebelum submit
   const checkFormValidity = () => {
     // Cek field wajib dasar
     if (
@@ -56,7 +60,7 @@ function TambahPenjualanAset() {
       return false;
     }
 
-    // Cek jumlah_terbayar berdasarkan status
+    // Cek jumlah_terbayar berdasarkan aturan status (Lunas/Belum Lunas)
     const dibayar = unformatNumber(formData.jumlah_terbayar);
 
     if (formData.status === "lunas") {
@@ -65,7 +69,7 @@ function TambahPenjualanAset() {
       if (dibayar <= 0 || dibayar >= total) return false;
     }
 
-    // Cek tidak ada error critical
+    // Cek apakah ada error pada field kritikal
     const criticalErrors = [
       "id_karyawan",
       "id_inventaris",
@@ -82,11 +86,12 @@ function TambahPenjualanAset() {
     return true;
   };
 
-  // useEffect untuk memantau perubahan form
+  // useEffect untuk memantau perubahan pada data form atau error guna update status validasi
   useEffect(() => {
     setIsFormValid(checkFormValidity());
   }, [formData, errors]);
 
+  // Helper fungsi untuk mendapatkan tanggal hari ini dalam format YYYY-MM-DD
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -95,13 +100,14 @@ function TambahPenjualanAset() {
     return `${year}-${month}-${day}`;
   };
 
+  // Mengambil data awal (Barang & Karyawan) saat komponen pertama kali dibuka
   useEffect(() => {
     Promise.all([mockApi.get(API_BARANG), mockApi.get(API_KARYAWAN)])
       .then(([barangRes, karyawanRes]) => {
         const allBarang = barangRes.data.data || [];
         const allKaryawan = karyawanRes.data.data || [];
 
-        // Filter barang dengan kondisi 'Baik' dan status 'Tersedia'
+        // Hanya tampilkan barang yang Kondisi Baik dan Status Tersedia
         const availableBarang = allBarang.filter(
           (barang) =>
             barang.kondisi?.toLowerCase() === "baik" &&
@@ -111,6 +117,7 @@ function TambahPenjualanAset() {
         setBarangList(availableBarang);
         setKaryawanList(allKaryawan);
 
+        // Format data untuk keperluan komponen React-Select
         setKaryawanOptions(
           allKaryawan.map((karyawan) => ({
             value: karyawan.id,
@@ -127,10 +134,7 @@ function TambahPenjualanAset() {
         );
 
         console.log("Total barang:", allBarang.length);
-        console.log(
-          "Barang available (Baik & Tersedia):",
-          availableBarang.length
-        );
+        console.log("Barang available (Baik & Tersedia):", availableBarang.length);
         console.log("Barang available:", availableBarang);
       })
       .catch((err) => {
@@ -139,6 +143,7 @@ function TambahPenjualanAset() {
       });
   }, []);
 
+  // Update harga otomatis ketika barang dipilih berdasarkan ID
   useEffect(() => {
     if (formData.id_inventaris && barangList.length > 0) {
       const barang = barangList.find(
@@ -152,10 +157,9 @@ function TambahPenjualanAset() {
         }));
       }
     }
-    // eslint-disable-next-line
   }, [formData.id_inventaris, barangList]);
 
-  // Format angka ke format ribuan (contoh: 2000 -> "2.000")
+  // Fungsi utilitas: Format angka menjadi format ribuan Indonesia
   const formatRupiah = (value) => {
     if (value === null || value === undefined) return "";
     const numberString = value.toString().replace(/\D/g, "");
@@ -163,7 +167,7 @@ function TambahPenjualanAset() {
     return parseInt(numberString, 10).toLocaleString("id-ID");
   };
 
-  // Hapus format ribuan (contoh: "2.000" -> 2000)
+  // Fungsi utilitas: Menghapus format ribuan (titik) agar menjadi angka murni
   const unformatNumber = (value) => {
     if (!value) return 0;
     const parsed = parseFloat(
@@ -172,7 +176,7 @@ function TambahPenjualanAset() {
     return isNaN(parsed) ? 0 : parsed;
   };
 
-  // Hitung sisa pembayaran (total - dibayar)
+  // Fungsi untuk menghitung selisih harga dan jumlah bayar
   const calculateSisa = () => {
     const total = unformatNumber(formData.harga_jual);
     const dibayar = unformatNumber(formData.jumlah_terbayar);
@@ -180,7 +184,7 @@ function TambahPenjualanAset() {
     return sisa < 0 ? 0 : sisa;
   };
 
-  // Handler untuk react-select karyawan
+  // Handler perubahan pilihan karyawan di dropdown
   const handleKaryawanChange = (selectedOption) => {
     setFormData((prev) => ({
       ...prev,
@@ -192,7 +196,7 @@ function TambahPenjualanAset() {
     }
   };
 
-  // Handler untuk react-select barang
+  // Handler perubahan pilihan barang di dropdown (sekaligus set harga jual)
   const handleBarangChange = (selectedOption) => {
     const newIdInventaris = selectedOption ? selectedOption.value : "";
 
@@ -201,7 +205,6 @@ function TambahPenjualanAset() {
       id_inventaris: newIdInventaris,
     }));
 
-    // Set harga jual otomatis ketika barang dipilih
     if (selectedOption && selectedOption.data) {
       setSelectedBarang(selectedOption.data);
       setFormData((prev) => ({
@@ -221,31 +224,29 @@ function TambahPenjualanAset() {
     }
   };
 
+  // Handler utama untuk perubahan input form manual
   const handleChange = (e) => {
     const { name, value } = e.target;
     let updatedValue = value;
 
-    // Format otomatis untuk harga_jual dan jumlah_terbayar seperti sebelumnya
+    // Otomatis format rupiah saat mengetik di input harga/bayar
     if (name === "harga_jual" || name === "jumlah_terbayar") {
       const cleaned = unformatNumber(value);
       updatedValue = formatRupiah(cleaned);
     }
 
-    // copy existing state and update the field
     let updatedFormData = {
       ...formData,
       [name]: updatedValue,
     };
 
-    // jika status diubah, jalankan logic yang sudah ada (tidak dihapus)
+    // Logic khusus saat mengganti Status (Lunas / Belum Lunas)
     if (name === "status") {
       if (value === "lunas") {
-        // set tanggal sekarang & jumlah_terbayar = harga_jual (formatted)
         updatedFormData.tanggal = getTodayDate();
         updatedFormData.jumlah_terbayar = updatedFormData.harga_jual || "";
       } else if (value === "belum lunas") {
         updatedFormData.tanggal = getTodayDate();
-        // kosongkan jumlah_terbayar agar user isi sendiri
         updatedFormData.jumlah_terbayar = "";
       } else {
         updatedFormData.tanggal = "";
@@ -253,8 +254,7 @@ function TambahPenjualanAset() {
       }
     }
 
-    // RE-VALIDASI REALTIME untuk jumlah_terbayar:
-    // tampilkan error hanya jika jumlah bayar > total
+    // Validasi realtime jumlah bayar tidak boleh melebihi total harga
     if (name === "jumlah_terbayar") {
       const total = parseFloat(unformatNumber(formData.harga_jual)) || 0;
       const dibayar = parseFloat(unformatNumber(value)) || 0;
@@ -265,63 +265,48 @@ function TambahPenjualanAset() {
           jumlah_terbayar: "Jumlah bayar tidak boleh lebih dari total harga",
         }));
       } else {
-        // jika valid, hapus error jumlah_terbayar (tetap pertahankan error lain)
         setErrors((prev) => ({ ...prev, jumlah_terbayar: "" }));
       }
-
-      // tambahan: jika status === 'lunas' dan user mengubah jumlah_terbayar,
-      // biarkan submit logic mengecek konsistensi (tidak otomatis merubah status)
     }
 
-    // set kembali state formData
     setFormData(updatedFormData);
 
-    // jika ada error untuk field ini, hapus (preserve behavior sebelumnya)
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
+  // Fungsi pengiriman data ke server
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
     const newErrors = {};
-
-    // Ambil angka bersih untuk pengecekan (sama seperti sebelumnya)
     const total = parseFloat(unformatNumber(formData.harga_jual)) || 0;
     const dibayar = parseFloat(unformatNumber(formData.jumlah_terbayar)) || 0;
 
-    // Validasi lama tetap utuh
-    if (!formData.id_karyawan)
-      newErrors.id_karyawan = "Pilih karyawan terlebih dahulu";
-    if (!formData.id_inventaris)
-      newErrors.id_inventaris = "Pilih barang terlebih dahulu";
-    if (!formData.harga_jual || total <= 0)
-      newErrors.harga_jual = "Harga jual harus diisi dan lebih dari 0";
-    if (!formData.metode_pembayaran)
-      newErrors.metode_pembayaran = "Pilih metode pembayaran";
+    // Validasi mandatory fields sebelum submit
+    if (!formData.id_karyawan) newErrors.id_karyawan = "Pilih karyawan terlebih dahulu";
+    if (!formData.id_inventaris) newErrors.id_inventaris = "Pilih barang terlebih dahulu";
+    if (!formData.harga_jual || total <= 0) newErrors.harga_jual = "Harga jual harus diisi dan lebih dari 0";
+    if (!formData.metode_pembayaran) newErrors.metode_pembayaran = "Pilih metode pembayaran";
     if (!formData.status) newErrors.status = "Status harus diisi";
     if (!formData.tanggal) newErrors.tanggal = "Tanggal harus diisi";
 
-    // Tambahan proteksi: jumlah bayar tidak boleh lebih dari total
     if (dibayar > total) {
-      newErrors.jumlah_terbayar =
-        "Jumlah bayar tidak boleh melebihi total harga";
+      newErrors.jumlah_terbayar = "Jumlah bayar tidak boleh melebihi total harga";
     }
 
-    // Validasi sesuai status (preserve original behavior)
+    // Validasi sinkronisasi status dan nominal pembayaran
     if (formData.status === "lunas") {
       if (dibayar !== total) {
-        newErrors.jumlah_terbayar =
-          "Untuk status Lunas, jumlah bayar harus sama dengan total harga";
+        newErrors.jumlah_terbayar = "Untuk status Lunas, jumlah bayar harus sama dengan total harga";
       }
     } else if (formData.status === "belum lunas") {
       if (!dibayar || dibayar <= 0) {
         newErrors.jumlah_terbayar = "Jumlah bayar harus diisi";
       } else if (dibayar >= total) {
-        newErrors.jumlah_terbayar =
-          "Untuk status Belum Lunas, jumlah bayar harus kurang dari total harga";
+        newErrors.jumlah_terbayar = "Untuk status Belum Lunas, jumlah bayar harus kurang dari total harga";
       }
     }
 
@@ -330,7 +315,7 @@ function TambahPenjualanAset() {
       return;
     }
 
-    // 🔥 KONFIRMASI SIMPAN
+    // Munculkan popup konfirmasi sebelum benar-benar mengirim ke database
     const confirmResult = await Swal.fire({
       title: "Konfirmasi Simpan",
       text: "Apakah Anda yakin ingin menyimpan data penjualan ini?",
@@ -347,7 +332,7 @@ function TambahPenjualanAset() {
 
     setLoading(true);
 
-    // Siapkan payload seperti sebelumnya (kirim angka bersih)
+    // Payload data dengan angka yang sudah bersih (tanpa format titik)
     const dataToSend = {
       id_karyawan: formData.id_karyawan,
       id_inventaris: formData.id_inventaris,
@@ -362,7 +347,7 @@ function TambahPenjualanAset() {
     mockApi
       .post(API_PENJUALAN, dataToSend)
       .then((response) => {
-        // 🔥 REDIRECT KE PENJUALAN ASET DENGAN PARAMETER
+        // Berhasil simpan, redirect dengan query parameter action=created
         navigate("/app/penjualan-aset?action=created");
       })
       .catch((err) => {
@@ -391,7 +376,7 @@ function TambahPenjualanAset() {
   const sisaPembayaran = calculateSisa();
   const isJumlahBayarDisabled = formData.status === "lunas";
 
-  // Custom styles untuk react-select
+  // Pengaturan style kustom untuk library react-select agar sesuai dengan tema form
   const customStyles = {
     control: (base, state) => ({
       ...base,
@@ -424,7 +409,8 @@ function TambahPenjualanAset() {
         <form onSubmit={handleSubmit}>
           <div className="form-section">
             <div className="form-grid">
-              {/* Nama Karyawan */}
+              
+              {/* Field Dropdown Karyawan dengan fitur pencarian */}
               <div className="form-group">
                 <label>
                   Nama Karyawan <span className="required-star">*</span>
@@ -450,7 +436,7 @@ function TambahPenjualanAset() {
                 )}
               </div>
 
-              {/* Nama Barang */}
+              {/* Field Dropdown Barang dengan fitur pencarian */}
               <div className="form-group">
                 <label>
                   Nama Barang <span className="required-star">*</span>
@@ -478,7 +464,7 @@ function TambahPenjualanAset() {
                 )}
               </div>
 
-              {/* Status */}
+              {/* Field Pilihan Status Penjualan */}
               <div className="form-group">
                 <label>
                   Status Penjualan <span className="required-star">*</span>
@@ -499,7 +485,7 @@ function TambahPenjualanAset() {
                 )}
               </div>
 
-              {/* Total Harga */}
+              {/* Field Total Harga (Read-only, otomatis terisi saat barang dipilih) */}
               <div className="form-group">
                 <label>
                   Total Harga <span className="required-star">*</span>
@@ -526,7 +512,7 @@ function TambahPenjualanAset() {
                 </small>
               </div>
 
-              {/* Jumlah Dibayar */}
+              {/* Field Nominal yang dibayar oleh pembeli */}
               <div className="form-group">
                 <label>
                   Jumlah Dibayar <span className="required-star">*</span>
@@ -553,7 +539,7 @@ function TambahPenjualanAset() {
                 </small>
               </div>
 
-              {/* Sisa Pembayaran - TIDAK REQUIRED */}
+              {/* Field Tampilan Sisa Bayar (Otomatis berkurang) */}
               <div className="form-group">
                 <label>Sisa Pembayaran</label>
                 <input
@@ -569,7 +555,7 @@ function TambahPenjualanAset() {
                 </small>
               </div>
 
-              {/* Metode Pembayaran */}
+              {/* Field Pilihan Metode Pembayaran */}
               <div className="form-group">
                 <label>
                   Metode Pembayaran <span className="required-star">*</span>
@@ -592,7 +578,7 @@ function TambahPenjualanAset() {
                 )}
               </div>
 
-              {/* Tanggal */}
+              {/* Field Input Tanggal Penjualan */}
               <div className="form-group">
                 <label>
                   Tanggal <span className="required-star">*</span>
@@ -610,7 +596,7 @@ function TambahPenjualanAset() {
                 )}
               </div>
 
-              {/* Keterangan - TIDAK REQUIRED */}
+              {/* Field TextArea untuk Catatan Tambahan */}
               <div className="form-group full-width">
                 <label>Keterangan</label>
                 <textarea
@@ -624,6 +610,7 @@ function TambahPenjualanAset() {
             </div>
           </div>
 
+          {/* Tombol aksi form */}
           <div className="form-buttons">
             <button
               type="button"

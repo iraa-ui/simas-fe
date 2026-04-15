@@ -19,6 +19,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import Swal from "sweetalert2";
 
 function MasterAset() {
+  // --- Deklarasi Konstanta dan State Utama ---
   const QR_BASE_URL = `https://simas-dev.cloudias79.com`;
   const API_URL = "/inventaris";
   const [inventaris, setInventaris] = useState([]);
@@ -28,14 +29,15 @@ function MasterAset() {
   const [statusFilter, setStatusFilter] = useState("Semua Status");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 🔹 STATE BARU UNTUK FILTER DROPDOWN
+  // --- State untuk UI Dropdown dan Filter ---
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [activeFilter, setActiveFilter] = useState("Semua Status");
 
-  // 🔹 STATE PAGINATION BARU
+  // --- State untuk Manajemen Navigasi Tabel (Pagination) ---
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  // --- State untuk Modal, Popup, dan Detail Item ---
   const [activePopup, setActivePopup] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [detailItem, setDetailItem] = useState(null);
@@ -47,7 +49,7 @@ function MasterAset() {
   const popupRef = useRef(null);
   const navigate = useNavigate();
 
-  // 🔹 FUNGSI UNTUK FILTER DROPDOWN
+  // --- Fungsi-fungsi Handler Filter ---
   const getFilterDisplayText = () => {
     return activeFilter;
   };
@@ -60,7 +62,7 @@ function MasterAset() {
     setShowFilterDropdown(false);
   };
 
-  // 🔹 HANDLE CLICK OUTSIDE UNTUK DROPDOWN
+  // --- Effect untuk Menutup Dropdown Saat Klik di Luar Area ---
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".filter-dropdown-container")) {
@@ -74,42 +76,41 @@ function MasterAset() {
     };
   }, []);
 
-  // 🔹 FUNGSI BARU: Membersihkan URL dari escape characters dengan berbagai approach
+  // --- Utilitas untuk Membersihkan Format URL Gambar/Foto ---
   const cleanUrl = (url) => {
     if (!url) return null;
 
-    // Approach 1: Remove escape slashes
+    // Approach 1: Menghapus escape slashes
     let cleaned = url.replace(/\\\//g, "/");
 
-    // Approach 2: Use URL constructor if valid URL
+    // Approach 2: Validasi dengan URL constructor
     try {
       cleaned = new URL(cleaned).toString();
     } catch (e) {
       console.warn("Invalid URL, using cleaned version:", cleaned);
     }
 
-    // Approach 3: Decode URI components
+    // Approach 3: Decode karakter URI
     try {
       cleaned = decodeURIComponent(cleaned);
     } catch (e) {
-      // If decoding fails, use the cleaned version
+      // Jika gagal decode, gunakan versi yang sudah dibersihkan sebelumnya
     }
 
     console.log("URL Cleaning:", { original: url, cleaned });
     return cleaned;
   };
 
-  // 🔹 FUNCTION BARU: Download QR dengan desain menarik - PERBAIKAN LOGO
+  // --- Fungsi untuk Membuat dan Mengunduh QR Code dengan Desain Canvas ---
   const downloadStyledQR = (asset) => {
-    // Buat canvas untuk desain
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
-    // Ukuran canvas - DIPERBESAR untuk kualitas lebih baik
+    // Pengaturan resolusi canvas
     canvas.width = 600;
     canvas.height = 700;
 
-    // Background gradient
+    // Membuat background gradient
     const gradient = ctx.createLinearGradient(
       0,
       0,
@@ -119,11 +120,10 @@ function MasterAset() {
     gradient.addColorStop(0, "#667eea");
     gradient.addColorStop(1, "#764ba2");
 
-    // Fill background
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Header background
+    // Menggambar area header
     ctx.fillStyle = "white";
     ctx.fillRect(30, 30, canvas.width - 60, 80);
     ctx.fillStyle = "#2c3e50";
@@ -134,67 +134,60 @@ function MasterAset() {
     ctx.fillStyle = "#666";
     ctx.fillText(asset.no_inventaris, canvas.width / 2, 85);
 
-    // QR Code area background
+    // Area putih untuk QR
     ctx.fillStyle = "white";
     ctx.fillRect(75, 130, 450, 450);
 
-    // Buat QR code menggunakan element yang sudah ada di DOM
+    // Membuat QR code sementara di DOM untuk dipindahkan ke Canvas
     const tempDiv = document.createElement("div");
     document.body.appendChild(tempDiv);
 
     const qrCode = new QRCodeCanvas({
       value: `${QR_BASE_URL}/aset/${asset.id_inventaris}`,
-      size: 360, // DIPERBESAR
+      size: 360,
       bgColor: "#ffffff",
       fgColor: "#2c3e50",
       includeMargin: false,
       level: "H",
     });
 
-    // Render QR code ke element sementara
     tempDiv.appendChild(qrCode);
 
-    // Tunggu sebentar untuk render, lalu capture sebagai image
     setTimeout(() => {
       const qrCanvas = tempDiv.querySelector("canvas");
       if (qrCanvas) {
         const qrImage = new Image();
         qrImage.onload = function () {
-          // Draw QR code ke canvas utama - DIPERBESAR
           ctx.drawImage(qrImage, 120, 175, 360, 360);
 
-          // Footer background
+          // Area footer informasi barang
           ctx.fillStyle = "white";
           ctx.fillRect(30, 560, canvas.width - 60, 80);
 
-          // Asset name
           ctx.fillStyle = "#2c3e50";
           ctx.font = "bold 18px Arial";
           ctx.textAlign = "center";
 
-          // Potong teks jika terlalu panjang
           let assetName = asset.nama_barang;
           if (assetName.length > 30) {
             assetName = assetName.substring(0, 30) + "...";
           }
           ctx.fillText(assetName, canvas.width / 2, 590);
 
-          // Instruction
           ctx.font = "14px Arial";
           ctx.fillStyle = "#666";
           ctx.fillText("Scan untuk detail aset", canvas.width / 2, 615);
 
-          // Download image
+          // Proses trigger download file PNG
           const url = canvas.toDataURL("image/png");
           const link = document.createElement("a");
           link.download = `QR-${asset.nama_barang}-${asset.no_inventaris}.png`;
           link.href = url;
           link.click();
 
-          // Cleanup
           document.body.removeChild(tempDiv);
 
-          // Show success message - ALERT DIKECILKAN
+          // Notifikasi sukses download
           Swal.fire({
             title: "Berhasil!",
             text: "QR Code berhasil didownload",
@@ -216,7 +209,7 @@ function MasterAset() {
     }, 100);
   };
 
-  // 🔥 FUNGSI BARU: Helper untuk styling kondisi
+  // --- Helper Styling Badge Kondisi dan Status ---
   const getKondisiStyle = (kondisi) => {
     switch (kondisi?.toLowerCase()) {
       case "baik":
@@ -228,7 +221,6 @@ function MasterAset() {
     }
   };
 
-  // 🔥 FUNGSI BARU: Helper untuk styling status
   const getStatusStyle = (status) => {
     switch (status?.toLowerCase()) {
       case "tersedia":
@@ -252,13 +244,13 @@ function MasterAset() {
     }
   };
 
-  // Tambahkan state baru
+  // --- State untuk Histori Aset ---
   const [historiData, setHistoriData] = useState([]);
   const [historiPerPage] = useState(5);
   const [currentHistoriPage, setCurrentHistoriPage] = useState(1);
   const [loadingHistori, setLoadingHistori] = useState(false);
 
-  // 🔥 PERBAIKAN: Fungsi fetchHistori yang sesuai dengan struktur backend
+  // --- Fungsi Fetch Histori Transaksi/Perubahan Aset ---
   const fetchHistori = async (idInventaris, page = 1) => {
     setLoadingHistori(true);
     try {
@@ -273,15 +265,9 @@ function MasterAset() {
 
       console.log("🔍 DEBUG Response Structure:", response.data);
 
-      // 🔥 STRUKTUR BACKEND:
-      // response.data.data adalah paginator Laravel (berisi data, current_page, last_page, dll)
-      // response.data.message adalah pesan
-      // response.data.inventaris adalah info inventaris
-
       const paginator = response.data.data;
 
       if (paginator && paginator.data) {
-        // Struktur Laravel paginator standard
         setHistoriData({
           data: paginator.data || [],
           current_page: paginator.current_page || 1,
@@ -292,7 +278,6 @@ function MasterAset() {
           to: paginator.to || 0,
         });
       } else {
-        // Fallback jika struktur tidak sesuai
         console.warn("⚠️ Struktur tidak sesuai, menggunakan data langsung");
         setHistoriData({
           data: response.data.data || [],
@@ -322,6 +307,7 @@ function MasterAset() {
     }
   };
 
+  // --- Fungsi Utama Fetch Data Inventaris ---
   const fetchData = async () => {
     setLoading(true);
     setError(false);
@@ -336,13 +322,11 @@ function MasterAset() {
       if (response.data.data?.length > 0) {
         const dataArray = response.data.data;
 
-        // 🔥 PERBAIKAN: Sort by created_at DESC (data baru di atas)
-        // Tapi edit tidak akan mengubah urutan karena created_at tetap
+        // Sorting data: terbaru berada di urutan atas
         const sortedData = dataArray.sort((a, b) => {
           if (a.created_at && b.created_at) {
             return new Date(b.created_at) - new Date(a.created_at);
           }
-          // Fallback: ID descending (data baru di atas)
           return (b.id_inventaris || b.id) - (a.id_inventaris || a.id);
         });
 
@@ -362,33 +346,32 @@ function MasterAset() {
     }
   };
 
+  // Fetch data awal saat komponen dimuat
   useEffect(() => {
     fetchData();
   }, []);
 
-  // 🔹 EFFECT BARU: Filter data berdasarkan status dan search
+  // --- Effect Logic untuk Filter dan Search Lokal ---
   useEffect(() => {
     let filtered = inventaris;
 
-    // Filter berdasarkan search query
     if (searchQuery.trim() !== "") {
       filtered = filtered.filter((item) =>
         item.nama_barang?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Filter berdasarkan status
     if (statusFilter !== "Semua Status") {
       filtered = filtered.filter(
         (item) => item.status?.toLowerCase() === statusFilter.toLowerCase()
       );
     }
 
-    setFilteredInventaris(filtered); // 🔥 GUNAKAN filtered LANGSUNG
-    setCurrentPage(1); // Reset ke halaman pertama ketika filter berubah
+    setFilteredInventaris(filtered);
+    setCurrentPage(1); 
   }, [statusFilter, searchQuery, inventaris]);
 
-  // 🔹 EFFECT BARU: Debug data inventaris
+  // Debugging URLs gambar
   useEffect(() => {
     if (inventaris.length > 0) {
       console.log("Inventaris data:", inventaris);
@@ -399,7 +382,7 @@ function MasterAset() {
     }
   }, [inventaris]);
 
-  // 🔹 EFFECT BARU: Untuk menampilkan alert success setelah redirect dari tambah/edit
+  // Effect untuk notifikasi sukses (berdasarkan parameter URL setelah redirect)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get("action");
@@ -409,25 +392,23 @@ function MasterAset() {
         title: "Berhasil!",
         text: "Data aset berhasil disimpan.",
         icon: "success",
-        showConfirmButton: false, // 🔥 HILANGKAN TOMBOL OK
-        timer: 1500, // 🔥 AUTO CLOSE SETELAH 1.5 DETIK
+        showConfirmButton: false,
+        timer: 1500,
       });
-      // Hapus parameter dari URL
       window.history.replaceState({}, "", "/app/master-aset");
     } else if (action === "updated") {
       Swal.fire({
         title: "Berhasil!",
         text: "Data aset berhasil diperbarui.",
         icon: "success",
-        showConfirmButton: false, // 🔥 HILANGKAN TOMBOL OK
-        timer: 1500, // 🔥 AUTO CLOSE SETELAH 1.5 DETIK
+        showConfirmButton: false,
+        timer: 1500,
       });
-      // Hapus parameter dari URL
       window.history.replaceState({}, "", "/app/master-aset");
     }
   }, []);
 
-  // 🔹 Klik luar untuk menutup popup
+  // Menutup popup saat klik di luar
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -440,36 +421,32 @@ function MasterAset() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 🔹 PAGINATION CALCULATIONS
+  // --- Kalkulasi Pagination Tabel Utama ---
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const currentRows = filteredInventaris.slice(indexOfFirstRow, indexOfLastRow);
   const totalPages = Math.ceil(filteredInventaris.length / rowsPerPage);
 
-  // 🔹 CHANGE PAGE
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // 🔹 CHANGE ROWS PER PAGE
   const handleRowsPerPageChange = (e) => {
     setRowsPerPage(Number(e.target.value));
-    setCurrentPage(1); // Reset ke halaman pertama ketika rows per page berubah
+    setCurrentPage(1);
   };
 
-  // 🔹 NEXT PAGE
   const nextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
 
-  // 🔹 PREV PAGE
   const prevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   };
 
-  // 🔹 Popup titik tiga
+  // --- Action Handlers (View, Edit, Delete, QR) ---
   const togglePopup = (e, id) => {
     e.stopPropagation();
     const rect = e.target.getBoundingClientRect();
@@ -479,7 +456,6 @@ function MasterAset() {
     setQrItem(null);
   };
 
-  // 🔹 Detail
   const handleDetail = async (item) => {
     setDetailItem(item);
     setActivePopup(null);
@@ -489,10 +465,8 @@ function MasterAset() {
 
   const closeDetail = () => setDetailItem(null);
 
-  // 🔹 Edit
   const handleEdit = (id) => navigate(`/app/master-aset/edit/${id}`);
 
-  // 🔹 Delete
   const handleDelete = (id) => {
     Swal.fire({
       title: "Apakah Anda yakin?",
@@ -512,13 +486,12 @@ function MasterAset() {
             },
           });
 
-          // 🔥 PERBAIKAN: Ganti alert delete success
           Swal.fire({
             title: "Berhasil!",
             text: "Data berhasil dihapus!",
             icon: "success",
-            showConfirmButton: false, // 🔥 HILANGKAN TOMBOL OK
-            timer: 1500, // 🔥 AUTO CLOSE SETELAH 1.5 DETIK
+            showConfirmButton: false,
+            timer: 1500,
           });
 
           fetchData();
@@ -535,7 +508,6 @@ function MasterAset() {
     });
   };
 
-  // 🔹 QR
   const handleQR = (id) => {
     const item = inventaris.find((i) => i.id_inventaris === id);
     setQrItem(item);
@@ -543,7 +515,7 @@ function MasterAset() {
     setDetailItem(null);
   };
 
-  // 🔹 GENERATE PAGE NUMBERS
+  // Helper untuk generate angka halaman pagination
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxVisiblePages = 5;
@@ -564,13 +536,13 @@ function MasterAset() {
     return pageNumbers;
   };
 
+  // --- Render Utama Komponen ---
   return (
     <div className="master-main-content-fixed">
-      {/* 🔥 OVERLAY BLUR - HANYA BACKGROUND YANG BUREM */}
+      {/* Overlay Background Blur saat Modal Terbuka */}
       {(detailItem || qrItem) && <div className="blur-overlay"></div>}
 
       <main className="master-main-content-fixed">
-        {/* Judul Halaman */}
         <div className="page-header">
           <h1>Master Aset</h1>
         </div>
@@ -578,6 +550,7 @@ function MasterAset() {
         <section className="master-table-section-fixed">
           <div className="section-header">
             <div className="header-actions">
+              {/* Input Pencarian */}
               <div className="search-form-compact">
                 <div className="search-input-group-compact">
                   <FaSearch className="search-icon-compact" />
@@ -591,9 +564,8 @@ function MasterAset() {
                 </div>
               </div>
 
-              {/* 🔹 FILTER DROPDOWN CUSTOM DAN TOMBOL TAMBAH - DI KANAN */}
+              {/* Grup Tombol Filter dan Tambah */}
               <div className="button-group">
-                {/* 🔹 FILTER DROPDOWN CUSTOM - GANTI SELECT BIASA */}
                 <div className="filter-dropdown-container">
                   <div className="filter-dropdown">
                     <button
@@ -722,6 +694,7 @@ function MasterAset() {
               </div>
             ) : (
               <>
+                {/* Tabel Inventaris */}
                 <table className="table-fixed">
                   <thead>
                     <tr>
@@ -806,9 +779,8 @@ function MasterAset() {
                   </tbody>
                 </table>
 
-                {/* 🔥 PAGINATION COMPONENT - ROW PAGE DI KIRI, PAGINATION DI KANAN */}
+                {/* Navigasi Pagination Tabel */}
                 <div className="pagination-container">
-                  {/* Row Page Selection - KIRI */}
                   <div className="row-page-selection">
                     <span className="row-page-label">Rows per page:</span>
                     <select
@@ -828,7 +800,6 @@ function MasterAset() {
                     </span>
                   </div>
 
-                  {/* Pagination Controls - KANAN */}
                   <div className="pagination-controls">
                     <button
                       onClick={prevPage}
@@ -864,7 +835,7 @@ function MasterAset() {
           </div>
         </section>
 
-        {/* Popup Aksi */}
+        {/* Floating Popup untuk Aksi Baris Tabel */}
         {activePopup && !qrItem && !detailItem && (
           <div
             ref={popupRef}
@@ -897,7 +868,7 @@ function MasterAset() {
           </div>
         )}
 
-        {/* Detail Drawer */}
+        {/* Modal Fullscreen Detail Aset */}
         {detailItem && (
           <>
             <div className="blur-overlay"></div>
@@ -910,7 +881,7 @@ function MasterAset() {
               </div>
 
               <div className="detail-modal-content-improved">
-                {/* 🔥 PERBAIKAN: Sisi Kiri - Informasi Aset */}
+                {/* Sisi Kiri: Informasi Teknis Aset */}
                 <div className="detail-info-side">
                   <div className="detail-info-card">
                     <h3>📋 Informasi Aset</h3>
@@ -985,7 +956,7 @@ function MasterAset() {
                   </div>
                 </div>
 
-                {/* 🔥 PERBAIKAN: Sisi Kanan - Histori Inventaris */}
+                {/* Sisi Kanan: Tabel Histori Perubahan/Penggunaan Aset */}
                 <div className="histori-side">
                   <div className="histori-card">
                     <h3>📊 Histori Inventaris</h3>
@@ -1046,7 +1017,7 @@ function MasterAset() {
                           </table>
                         </div>
 
-                        {/* 🔥 PERBAIKAN: Pagination Histori - Struktur yang benar */}
+                        {/* Kontrol Navigasi Histori */}
                         {historiData.last_page > 1 ? (
                           <div className="pagination-histori-container-improved">
                             <div className="pagination-histori-info">
@@ -1069,7 +1040,6 @@ function MasterAset() {
                                 <FaChevronLeft />
                               </button>
 
-                              {/* Generate page numbers yang lebih sederhana */}
                               {(() => {
                                 const pageNumbers = [];
                                 const totalPages = historiData.last_page;
@@ -1084,7 +1054,6 @@ function MasterAset() {
                                   startPage + maxVisiblePages - 1
                                 );
 
-                                // Adjust jika di akhir
                                 if (
                                   endPage - startPage + 1 < maxVisiblePages &&
                                   startPage > 1
@@ -1134,7 +1103,6 @@ function MasterAset() {
                             </div>
                           </div>
                         ) : (
-                          // Tampilkan info jika hanya 1 halaman tetapi ada data
                           historiData.total > 0 &&
                           historiData.total <= historiData.per_page && (
                             <div
@@ -1163,7 +1131,7 @@ function MasterAset() {
           </>
         )}
 
-        {/* QR Modal */}
+        {/* Modal Tampilan QR Code dan Download Design */}
         {qrItem && (
           <>
             <div
@@ -1185,7 +1153,6 @@ function MasterAset() {
                 {qrItem.nama_barang}
               </p>
 
-              {/* ✅ NO INVENTARIS DI QR MODAL */}
               <div
                 style={{
                   marginBottom: "15px",
@@ -1235,24 +1202,19 @@ function MasterAset() {
                   onClick={() => {
                     Swal.close();
 
-                    // Ambil QR code yang sudah ada di modal
                     const qrCanvas = document.querySelector(
                       ".qr-code-container canvas"
                     );
 
-                    // Buat canvas baru untuk desain
                     const designCanvas = document.createElement("canvas");
                     const ctx = designCanvas.getContext("2d");
 
-                    // Ukuran canvas diperbesar untuk kualitas lebih baik
                     designCanvas.width = 600;
                     designCanvas.height = 250;
 
-                    // Background putih bersih dengan shadow effect
                     ctx.fillStyle = "#ffffff";
                     ctx.fillRect(0, 0, designCanvas.width, designCanvas.height);
 
-                    // Border outline dengan shadow
                     ctx.strokeStyle = "#1a73e8";
                     ctx.lineWidth = 2;
                     ctx.strokeRect(
@@ -1262,24 +1224,17 @@ function MasterAset() {
                       designCanvas.height - 4
                     );
 
-                    // Load dan draw logo SIMAS
                     const logo = new Image();
                     logo.onload = function () {
-                      // Aspect ratio yang benar untuk logo
                       const originalAspectRatio = logo.width / logo.height;
-
-                      // Ukuran yang proporsional
                       const logoWidth = 160;
                       const logoHeight = logoWidth / originalAspectRatio;
-
-                      // Posisi logo
                       const logoX = 20;
                       const logoY = 10;
 
                       ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
 
-                      // 🔥 PERBAIKAN: Garis pemisah - JARAK DIPERDEKAT
-                      const separatorY = logoY + logoHeight + 8; // 🔥 DARI 15 JADI 8
+                      const separatorY = logoY + logoHeight + 8;
                       ctx.strokeStyle = "#e0e0e0";
                       ctx.lineWidth = 2;
                       ctx.beginPath();
@@ -1287,13 +1242,10 @@ function MasterAset() {
                       ctx.lineTo(designCanvas.width - 20, separatorY);
                       ctx.stroke();
 
-                      // QR Code posisi disesuaikan dengan garis pemisah yang lebih dekat
-                      const qrY = separatorY + 8; // 🔥 DARI 10 JADI 8
+                      const qrY = separatorY + 8;
                       ctx.drawImage(qrCanvas, 30, qrY, 120, 120);
 
                       const infoX = 170;
-
-                      // Posisi teks disesuaikan
                       const textStartY = qrY + 20;
                       ctx.fillStyle = "#1a73e8";
                       ctx.font = "bold 16px Arial";
@@ -1307,10 +1259,9 @@ function MasterAset() {
                       }
                       ctx.fillText(assetName, infoX + 120, textStartY);
 
-                      // 🔥 PERBAIKAN: Ganti "No. Inventaris" menjadi "Nomer Barang"
                       ctx.fillStyle = "#1a73e8";
                       ctx.font = "bold 16px Arial";
-                      ctx.fillText("Nomer Barang:", infoX, textStartY + 30); // 🔥 "No. Inventaris:" -> "Nomer Barang:"
+                      ctx.fillText("Nomer Barang:", infoX, textStartY + 30);
                       ctx.fillStyle = "#2c3e50";
                       ctx.font = "bold 16px Arial";
                       ctx.fillText(
@@ -1319,9 +1270,6 @@ function MasterAset() {
                         textStartY + 30
                       );
 
-                      // 🔥 PERBAIKAN: HAPUS STATUS - dihapus seluruh bagian status
-
-                      // Instruction text
                       ctx.fillStyle = "#666";
                       ctx.font = "italic 12px Arial";
                       ctx.textAlign = "center";
@@ -1337,7 +1285,6 @@ function MasterAset() {
                       link.href = url;
                       link.click();
 
-                      // Alert success
                       Swal.fire({
                         icon: "success",
                         title: "QR Code berhasil didownload",
@@ -1353,24 +1300,17 @@ function MasterAset() {
                       });
                     };
 
-                    // Handle error loading logo
+                    // Fallback jika logo tidak termuat
                     logo.onerror = function () {
-                      console.log(
-                        "Logo tidak ditemukan, menggunakan fallback text"
-                      );
-
-                      // Fallback text dengan aspect ratio yang baik
                       ctx.fillStyle = "#1a73e8";
                       ctx.font = "bold 24px Arial";
                       ctx.textAlign = "left";
 
-                      // Fallback logo text
                       const fallbackLogoWidth = 160;
                       const fallbackLogoHeight = 50;
                       const fallbackLogoX = 20;
                       const fallbackLogoY = 15;
 
-                      // Background untuk fallback text
                       ctx.fillStyle = "#f0f7ff";
                       ctx.fillRect(
                         fallbackLogoX,
@@ -1379,7 +1319,6 @@ function MasterAset() {
                         fallbackLogoHeight
                       );
 
-                      // Text fallback
                       ctx.fillStyle = "#1a73e8";
                       ctx.font = "bold 20px Arial";
                       ctx.fillText(
@@ -1388,8 +1327,7 @@ function MasterAset() {
                         fallbackLogoY + 20
                       );
 
-                      // 🔥 PERBAIKAN: Garis pemisah - JARAK DIPERDEKAT (fallback juga)
-                      const separatorY = fallbackLogoY + fallbackLogoHeight + 8; // 🔥 DARI 10 JADI 8
+                      const separatorY = fallbackLogoY + fallbackLogoHeight + 8;
                       ctx.strokeStyle = "#e0e0e0";
                       ctx.lineWidth = 2;
                       ctx.beginPath();
@@ -1397,14 +1335,12 @@ function MasterAset() {
                       ctx.lineTo(designCanvas.width - 20, separatorY);
                       ctx.stroke();
 
-                      // QR Code - posisi disesuaikan
-                      const qrY = separatorY + 8; // 🔥 DARI 10 JADI 8
+                      const qrY = separatorY + 8;
                       ctx.drawImage(qrCanvas, 30, qrY, 120, 120);
 
                       const infoX = 170;
                       const textStartY = qrY + 20;
 
-                      // Informasi aset
                       ctx.fillStyle = "#1a73e8";
                       ctx.font = "bold 16px Arial";
                       ctx.fillText("Nama Barang:", infoX, textStartY);
@@ -1417,10 +1353,9 @@ function MasterAset() {
                       }
                       ctx.fillText(assetName, infoX + 120, textStartY);
 
-                      // 🔥 PERBAIKAN: Ganti "No. Inventaris" menjadi "Nomer Barang" (fallback juga)
                       ctx.fillStyle = "#1a73e8";
                       ctx.font = "bold 16px Arial";
-                      ctx.fillText("Nomer Barang:", infoX, textStartY + 30); // 🔥 "No. Inventaris:" -> "Nomer Barang:"
+                      ctx.fillText("Nomer Barang:", infoX, textStartY + 30);
                       ctx.fillStyle = "#2c3e50";
                       ctx.font = "bold 16px Arial";
                       ctx.fillText(
@@ -1429,9 +1364,6 @@ function MasterAset() {
                         textStartY + 30
                       );
 
-                      // 🔥 PERBAIKAN: HAPUS STATUS - dihapus (fallback juga)
-
-                      // Instruction
                       ctx.fillStyle = "#666";
                       ctx.font = "italic 12px Arial";
                       ctx.textAlign = "center";
@@ -1462,7 +1394,6 @@ function MasterAset() {
                       });
                     };
 
-                    // ✅ GUNAKAN IMPORTED LOGO - PATH YANG BENAR
                     logo.src = simasLogo;
                   }}
                   style={{
@@ -1481,7 +1412,6 @@ function MasterAset() {
                 </button>
               </div>
 
-              {/* ✅ DEBUG URL YANG DIPERBAIKI */}
               <p
                 style={{
                   fontSize: "12px",

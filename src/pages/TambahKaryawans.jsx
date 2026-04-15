@@ -14,23 +14,28 @@ import Swal from "sweetalert2";
 import "../styles/EditTambahKaryawans.css";
 
 function TambahKaryawans() {
+  // --- KONSTANTA & HOOKS ---
   const API_URL = "/karyawans";
   const navigate = useNavigate();
 
+  // --- STATE MANAGEMENT ---
+  // State untuk menyimpan data input form
   const [formData, setFormData] = useState({
     nip: "",
     nama: "",
     status: "Inactive",
   });
 
+  // State untuk menyimpan pesan error validasi dan status loading
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // 🔹 Handle input perubahan value form
+  // --- EVENT HANDLERS ---
+  // 🔹 Handle input perubahan value form dengan validasi real-time
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Clear error ketika user mulai mengetik
+    // Menghapus pesan error saat pengguna mulai memperbaiki input
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -38,22 +43,19 @@ function TambahKaryawans() {
       }));
     }
 
-    // Validasi real-time untuk NIP
+    // --- VALIDASI REAL-TIME UNTUK NIP ---
     if (name === "nip") {
-      // Hanya izinkan angka
+      // Validasi karakter: Hanya memperbolehkan angka
       if (value && !/^\d*$/.test(value)) {
-        // Set error state untuk NIP TANPA reset nilai
         setErrors((prev) => ({
           ...prev,
           nip: ["NIP harus berupa angka"],
         }));
-        // Biarkan nilai tetap seperti sebelumnya, jangan reset
         return;
       }
 
-      // Validasi panjang NIP (maksimal 18 digit)
+      // Validasi panjang: Maksimal 18 digit (dipotong otomatis jika lebih)
       if (value.length > 18) {
-        // Potong ke 18 digit
         setFormData((prev) => ({
           ...prev,
           nip: value.slice(0, 18),
@@ -61,14 +63,13 @@ function TambahKaryawans() {
         return;
       }
 
-      // 🔹 VALIDASI REAL-TIME UNTUK NIP MINIMAL 9 DIGIT
+      // Validasi panjang minimal: Memberi peringatan jika kurang dari 9 digit
       if (value.length > 0 && value.length < 9) {
         setErrors((prev) => ({
           ...prev,
           nip: ["NIP minimal 9 digit"],
         }));
       } else if (value.length === 0) {
-        // Clear error jika field kosong
         setErrors((prev) => ({
           ...prev,
           nip: "",
@@ -76,27 +77,24 @@ function TambahKaryawans() {
       }
     }
 
-    // Validasi real-time untuk NAMA (harus huruf)
+    // --- VALIDASI REAL-TIME UNTUK NAMA ---
     if (name === "nama") {
-      // Hanya izinkan huruf, spasi, dan karakter khusus nama
+      // Validasi karakter: Hanya huruf, spasi, titik, kutip, dan dash
       if (value && !/^[a-zA-Z\s.'-]*$/.test(value)) {
-        // Set error state untuk Nama TANPA reset nilai
         setErrors((prev) => ({
           ...prev,
           nama: ["Nama harus berupa huruf"],
         }));
-        // Biarkan nilai tetap seperti sebelumnya, jangan reset
         return;
       }
 
-      // 🔹 VALIDASI REAL-TIME UNTUK NAMA YANG DIHAPUS
+      // Validasi keberadaan: Memastikan nama tidak dihapus hingga kosong
       if (value.length === 0) {
         setErrors((prev) => ({
           ...prev,
           nama: ["Nama wajib diisi"],
         }));
       } else {
-        // Clear error jika nama sudah terisi
         setErrors((prev) => ({
           ...prev,
           nama: "",
@@ -104,18 +102,19 @@ function TambahKaryawans() {
       }
     }
 
-    // Update form data jika validasi berhasil
+    // Update state formData utama
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  // 🔹 Validasi form sebelum submit
+  // --- LOGIC VALIDASI FORM ---
+  // 🔹 Fungsi untuk memeriksa seluruh field sebelum proses submit
   const validateForm = () => {
     const newErrors = {};
 
-    // 🔹 VALIDASI NIP - MINIMAL 9 DIGIT, MAKSIMAL 18 DIGIT
+    // Validasi NIP (Keberadaan, Karakter, Minimal 9, Maksimal 18)
     if (!formData.nip.trim()) {
       newErrors.nip = ["NIP wajib diisi."];
     } else if (!/^\d+$/.test(formData.nip)) {
@@ -126,7 +125,7 @@ function TambahKaryawans() {
       newErrors.nip = ["NIP maksimal 18 digit."];
     }
 
-    // 🔹 VALIDASI NAMA
+    // Validasi Nama (Keberadaan, Panjang, Karakter)
     if (!formData.nama.trim()) {
       newErrors.nama = ["Nama wajib diisi."];
     } else if (formData.nama.length > 100) {
@@ -135,7 +134,7 @@ function TambahKaryawans() {
       newErrors.nama = ["Nama harus berupa huruf."];
     }
 
-    // 🔹 VALIDASI STATUS
+    // Validasi Status (Default Inactive untuk entry baru)
     if (formData.status && formData.status !== "Inactive") {
       newErrors.status = ["Status hanya boleh Inactive untuk karyawan baru."];
     }
@@ -143,17 +142,18 @@ function TambahKaryawans() {
     return newErrors;
   };
 
-  // 🔹 Submit data ke backend
+  // --- SUBMIT PROCESS ---
+  // 🔹 Fungsi untuk mengirim data ke backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
-    // Validasi frontend - CEK NIP MINIMAL 9 DIGIT DAN MAKSIMAL 18 DIGIT
+    // Eksekusi validasi frontend
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       
-      // 🔹 SWEETALERT KHUSUS UNTUK NIP KURANG DARI 9 DIGIT
+      // SweetAlert khusus jika NIP kurang dari batas minimal
       if (formErrors.nip && formErrors.nip[0] === "NIP minimal 9 digit.") {
         Swal.fire({
           title: "Gagal!",
@@ -164,7 +164,7 @@ function TambahKaryawans() {
         return;
       }
 
-      // 🔹 SWEETALERT UNTUK VALIDASI LAINNYA
+      // SweetAlert untuk peringatan validasi umum
       if (Object.keys(formErrors).length > 0) {
         Swal.fire({
           title: "Gagal!",
@@ -176,7 +176,7 @@ function TambahKaryawans() {
       }
     }
 
-    // 🔹 KONFIRMASI SEBELUM SIMPAN
+    // Konfirmasi final kepada pengguna sebelum data disimpan
     const confirmResult = await Swal.fire({
       title: "Konfirmasi Simpan",
       text: "Apakah Anda yakin ingin menyimpan data karyawan ini?",
@@ -189,7 +189,6 @@ function TambahKaryawans() {
       reverseButtons: true
     });
 
-    // Jika user membatalkan
     if (!confirmResult.isConfirmed) {
       return;
     }
@@ -213,7 +212,7 @@ function TambahKaryawans() {
 
       console.log("✅ Response sukses:", response.data);
 
-      // 🔹 LANGSUNG REDIRECT KE HALAMAN KARYAWANS DENGAN STATE SUCCESS
+      // Navigasi ke halaman list karyawan dengan membawa state untuk trigger alert sukses
       navigate("/app/karyawans", { 
         state: { 
           showSuccessAlert: true,
@@ -222,14 +221,11 @@ function TambahKaryawans() {
       });
     } catch (error) {
       console.error("❌ Gagal simpan data:", error);
-      console.error("❌ Error details:", error.response?.data);
 
-      // Handle error response dari backend
+      // Penanganan Error berdasarkan status kode HTTP atau masalah jaringan
       if (error.response?.status === 422) {
         const errorData = error.response.data;
-
         if (errorData.errors) {
-          // 🔹 HANYA TAMPILKAN ERROR DI FORM UNTUK VALIDASI BIASA
           setErrors(errorData.errors);
         } else if (errorData.message) {
           Swal.fire({
@@ -240,52 +236,28 @@ function TambahKaryawans() {
           });
         }
       } else if (error.response?.status === 500) {
-        Swal.fire({
-          title: "Gagal!",
-          text: "Terjadi kesalahan server. Silakan coba lagi.",
-          icon: "error",
-          confirmButtonText: "OK",
-        });
-      } else if (
-        error.code === "NETWORK_ERROR" ||
-        error.message === "Network Error"
-      ) {
-        Swal.fire({
-          title: "Gagal!",
-          text: "Gagal terhubung ke server. Periksa koneksi internet Anda.",
-          icon: "error",
-          confirmButtonText: "OK",
-        });
+        Swal.fire({ title: "Gagal!", text: "Terjadi kesalahan server.", icon: "error" });
+      } else if (error.code === "NETWORK_ERROR" || error.message === "Network Error") {
+        Swal.fire({ title: "Gagal!", text: "Gagal terhubung ke server.", icon: "error" });
       } else {
-        Swal.fire({
-          title: "Gagal!",
-          text: "Terjadi kesalahan tidak terduga. Silakan coba lagi.",
-          icon: "error",
-          confirmButtonText: "OK",
-        });
+        Swal.fire({ title: "Gagal!", text: "Terjadi kesalahan tidak terduga.", icon: "error" });
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 Check jika form bisa disubmit
+  // --- HELPER FUNCTION ---
+  // 🔹 Logika untuk menonaktifkan/mengaktifkan tombol submit secara dinamis
   const canSubmit = () => {
-    // Jika loading, disable tombol
     if (loading) return false;
-    
-    // Jika ada error, disable tombol
     if (Object.keys(errors).some(key => errors[key] !== "")) return false;
-    
-    // Cek NIP dan Nama sudah terisi
     if (!formData.nip.trim() || !formData.nama.trim()) return false;
-    
-    // Cek NIP minimal 9 digit
     if (formData.nip.length < 9) return false;
-    
     return true;
   };
 
+  // --- UI RENDER ---
   return (
     <div className="master-main-content-fixed">
       <main className="master-main-content-fixed">
@@ -294,12 +266,11 @@ function TambahKaryawans() {
             <h2>Tambah Data Karyawan</h2>
 
             <form onSubmit={handleSubmit}>
-              {/* Section Informasi Karyawan */}
               <div className="section-info">
                 <h3>Informasi Karyawan</h3>
 
                 <div className="form-grid">
-                  {/* NIP */}
+                  {/* Field: NIP */}
                   <div className="form-group">
                     <label htmlFor="nip" className="required">
                       NIP
@@ -318,14 +289,12 @@ function TambahKaryawans() {
                     />
                     {errors.nip && (
                       <span className="error-text">
-                        {Array.isArray(errors.nip)
-                          ? errors.nip[0]
-                          : errors.nip}
+                        {Array.isArray(errors.nip) ? errors.nip[0] : errors.nip}
                       </span>
                     )}
                   </div>
 
-                  {/* Nama Karyawan */}
+                  {/* Field: Nama Karyawan */}
                   <div className="form-group">
                     <label htmlFor="nama" className="required">
                       Nama Karyawan
@@ -344,14 +313,12 @@ function TambahKaryawans() {
                     />
                     {errors.nama && (
                       <span className="error-text">
-                        {Array.isArray(errors.nama)
-                          ? errors.nama[0]
-                          : errors.nama}
+                        {Array.isArray(errors.nama) ? errors.nama[0] : errors.nama}
                       </span>
                     )}
                   </div>
 
-                  {/* 🔹 Status Field (Readonly) */}
+                  {/* Field: Status (ReadOnly - Hanya Inactive untuk data baru) */}
                   <div className="form-group">
                     <label htmlFor="status">Status</label>
                     <input
@@ -370,16 +337,14 @@ function TambahKaryawans() {
                     />
                     {errors.status && (
                       <span className="error-text">
-                        {Array.isArray(errors.status)
-                          ? errors.status[0]
-                          : errors.status}
+                        {Array.isArray(errors.status) ? errors.status[0] : errors.status}
                       </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* 🔹 Tombol Aksi */}
+              {/* Tombol Aksi: Batal & Simpan */}
               <div className="form-actions">
                 <button
                   type="button"

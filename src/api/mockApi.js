@@ -1,9 +1,11 @@
+// Pengganti axios - mengambil data dari mockData, bukan dari server
+
 import {
   mockInventaris, mockKaryawans, mockStokBarang, mockHistoriStok,
   mockPeminjamanPengembalian, mockKendalaBarang, mockPenjualanAset, mockDashboard,
 } from "./mockData";
 
-// Database lokal di memory - bisa tambah/hapus/edit selama session
+// Database di memory - data bisa berubah selama sesi (hilang saat refresh)
 let db = {
   inventaris: [...mockInventaris],
   karyawans: [...mockKaryawans],
@@ -14,7 +16,7 @@ let db = {
   penjualan_asset: [...mockPenjualanAset],
 };
 
-// Tentukan koleksi dari URL
+// Menentukan koleksi data berdasarkan URL
 const getCollection = (url) => {
   if (url.includes("penjualan_asset")) return "penjualan_asset";
   if (url.includes("histori-stok")) return "histori-stok";
@@ -27,7 +29,7 @@ const getCollection = (url) => {
   return null;
 };
 
-// Ambil ID dari URL: "/inventaris/3" → 3
+// Mengambil ID dari URL - contoh: "/inventaris/3" menghasilkan 3
 const getIdFromUrl = (url) => {
   const cleanUrl = url.split("?")[0];
   const parts = cleanUrl.split("/").filter(Boolean);
@@ -36,7 +38,7 @@ const getIdFromUrl = (url) => {
   return isNaN(id) ? null : id;
 };
 
-// Key ID tiap koleksi
+// Primary key tiap koleksi
 const getIdKey = (collection) => ({
   inventaris: "id_inventaris",
   karyawans: "id",
@@ -47,43 +49,48 @@ const getIdKey = (collection) => ({
   penjualan_asset: "id_penjualan",
 }[collection] || "id");
 
-// Konversi FormData ke plain object
+// Mengubah FormData menjadi plain object
+// File object (foto) dikonversi ke URL sementara agar bisa ditampilkan di tag img
 const formDataToObject = (body) => {
   if (body instanceof FormData) {
     const obj = {};
-    body.forEach((value, key) => { if (key !== "_method") obj[key] = value; });
+    body.forEach((value, key) => {
+      if (key === "_method") return;
+      if (value instanceof File && value.size > 0) {
+        obj[key] = value;
+        obj["foto_url"] = URL.createObjectURL(value);
+      } else {
+        obj[key] = value;
+      }
+    });
     return obj;
   }
   return body || {};
 };
 
+// Simulasi delay jaringan agar terasa seperti request API sungguhan
 const delay = (ms = 250) => new Promise((r) => setTimeout(r, ms));
 
 const mockApi = {
 
-  // ─── GET ────────────────────────────────────────────────
+  // GET - mengambil data
   async get(url, config) {
     await delay();
     const collection = getCollection(url);
     const id = getIdFromUrl(url);
-    console.log(`[mockApi GET] ${url}`);
 
-    // Dashboard
     if (collection === "dashboard") return { data: mockDashboard };
 
-    // Next no inventaris
     if (url.includes("next-no") || url.includes("next_no")) {
       const maxNo = db.inventaris.length + 1;
       const no = `INV-2024-${String(maxNo).padStart(3, "0")}`;
       return { data: { next_no: no, next_no_inventaris: no, data: { no_inventaris: no } } };
     }
 
-    // Histori inventaris: /inventaris/:id/histori
     if (url.includes("/histori") && collection === "inventaris") {
       return { data: { data: [], meta: { total: 0, per_page: 5, current_page: 1, last_page: 1 } } };
     }
 
-    // Histori penjualan: /penjualan_asset/:id/histori
     if (url.includes("/histori") && collection === "penjualan_asset") {
       return { data: { data: [] } };
     }
@@ -92,13 +99,13 @@ const mockApi = {
 
     const idKey = getIdKey(collection);
 
-    // Special: histori-stok by ID → filter by id_barang (bukan id_histori)
+    // Khusus histori-stok: cari berdasarkan id_barang, bukan id_histori
     if (id && collection === "histori-stok") {
       const items = db["histori-stok"].filter((h) => h.id_barang === id);
       return { data: { data: items } };
     }
 
-    // GET by ID → { data: { data: item } }
+    // GET satu data berdasarkan ID
     if (id) {
       const item = db[collection].find((d) => d[idKey] === id);
       if (!item) {
@@ -109,20 +116,18 @@ const mockApi = {
       return { data: { data: item } };
     }
 
-    // GET semua → { data: { data: [...], total: N } }
+    // GET semua data
     return { data: { data: [...db[collection]], total: db[collection].length } };
   },
 
-  // ─── POST ───────────────────────────────────────────────
+  // POST - menambah data baru
   async post(url, body, config) {
     await delay();
     const collection = getCollection(url);
     const id = getIdFromUrl(url);
     const bodyObj = formDataToObject(body);
 
-    console.log(`[mockApi POST] ${url}`, bodyObj);
-
-    // Kalau POST ke URL dengan ID (Laravel _method=PUT trick) → update
+    // POST ke URL berisi ID = update (Laravel _method PUT trick)
     if (id && collection && db[collection]) {
       const idKey = getIdKey(collection);
       const idx = db[collection].findIndex((d) => d[idKey] === id);
@@ -136,7 +141,6 @@ const mockApi = {
       return { data: { message: "Berhasil", success: true } };
     }
 
-    // Tambah data baru
     const idKey = getIdKey(collection);
     const maxId = db[collection].reduce((max, item) => Math.max(max, item[idKey] || 0), 0);
     const newItem = {
@@ -150,13 +154,12 @@ const mockApi = {
     return { data: { message: "Data berhasil ditambahkan", data: newItem, success: true } };
   },
 
-  // ─── PUT ────────────────────────────────────────────────
+  // PUT - mengubah data yang sudah ada
   async put(url, body, config) {
     await delay();
     const collection = getCollection(url);
     const id = getIdFromUrl(url);
     const bodyObj = formDataToObject(body);
-    console.log(`[mockApi PUT] ${url}`, bodyObj);
 
     if (!collection || !db[collection]) {
       return { data: { message: "Berhasil diupdate", success: true } };
@@ -171,12 +174,11 @@ const mockApi = {
     return { data: { message: "Berhasil diupdate", success: true } };
   },
 
-  // ─── DELETE ─────────────────────────────────────────────
+  // DELETE - menghapus data
   async delete(url, config) {
     await delay();
     const collection = getCollection(url);
     const id = getIdFromUrl(url);
-    console.log(`[mockApi DELETE] ${url}`);
 
     if (!collection || !db[collection]) {
       return { data: { message: "Berhasil dihapus", success: true } };
