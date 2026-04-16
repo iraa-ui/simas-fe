@@ -19,6 +19,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/PeminjamanPengembalianAset.css";
 import Swal from "sweetalert2";
 import dataTidakDitemukan from "../assets/data-tidak-ada.png";
+import { createPortal } from "react-dom";
 
 function PeminjamanPengembalianAset() {
   const API_URL = "/pinjamkembalis";
@@ -614,102 +615,105 @@ function PeminjamanPengembalianAset() {
       </main>
 
       {/* Bagian Modal Detail: Muncul saat tombol mata diklik */}
-      {showDetailModal && selectedItem && (
-        <div className="detail-fullscreen-overlay" onClick={closeDetailModal}>
-          <div
-            className="detail-fullscreen"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="detail-fullscreen-header">
-              <h2>
-                <FaBox /> Detail Peminjaman Aset
-              </h2>
-              <button className="close-btn" onClick={closeDetailModal}>
-                <FaTimes />
-              </button>
-            </div>
+      {showDetailModal &&
+  selectedItem &&
+  createPortal(
+    <div className="detail-fullscreen-overlay" onClick={closeDetailModal}>
+      <div
+        className="detail-fullscreen"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="detail-fullscreen-header">
+          <h2>
+            <FaBox /> Detail Peminjaman Aset
+          </h2>
+          <button className="close-btn" onClick={closeDetailModal}>
+            <FaTimes />
+          </button>
+        </div>
 
-            <div className="detail-fullscreen-content">
-              <div className="detail-fullscreen-grid">
-                <div className="detail-main-info">
-                  <h3>Informasi Peminjaman</h3>
-                  <div className="info-grid">
-                    <div className="info-item">
-                      <FaInfoCircle className="info-icon" />
-                      <div className="info-content">
-                        <label>Status</label>
-                        <p>
-                          <span
-                            className={getDetailStatusBadge(
-                              selectedItem.status
-                            )}
-                          >
-                            {formatStatusDisplay(selectedItem.status)}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="info-item">
-                      <FaUser className="info-icon" />
-                      <div className="info-content">
-                        <label>Nama Karyawan</label>
-                        <p>
-                          {selectedItem.nama_karyawan ||
-                            selectedItem.id_karyawan ||
-                            "-"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="info-item">
-                      <FaBox className="info-icon" />
-                      <div className="info-content">
-                        <label>Nama Barang</label>
-                        <p>
-                          {selectedItem.nama_barang ||
-                            selectedItem.id_inventaris ||
-                            "-"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="info-item">
-                      <FaCalendarAlt className="info-icon" />
-                      <div className="info-content">
-                        <label>Tanggal Peminjaman</label>
-                        <p>{formatDate(selectedItem.tanggal_peminjaman)}</p>
-                      </div>
-                    </div>
-
-                    <div className="info-item">
-                      <FaCalendarAlt className="info-icon" />
-                      <div className="info-content">
-                        <label>Tanggal Pengembalian</label>
-                        <p>{formatDate(selectedItem.tanggal_pengembalian)}</p>
-                      </div>
-                    </div>
-
-                    {selectedItem.keterangan && (
-                      <div className="info-item full-width">
-                        <FaStickyNote className="info-icon" />
-                        <div className="info-content">
-                          <label>Keterangan</label>
-                          <p className="keterangan">
-                            {selectedItem.keterangan ||
-                              selectedItem.notes ||
-                              "-"}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+        <div className="detail-fullscreen-content">
+          <div className="detail-fullscreen-grid">
+            <div className="detail-main-info">
+              <h3>Informasi Peminjaman</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <FaInfoCircle className="info-icon" />
+                  <div className="info-content">
+                    <label>Status</label>
+                    <p>
+                      <span
+                        className={getDetailStatusBadge(
+                          selectedItem.status
+                        )}
+                      >
+                        {formatStatusDisplay(selectedItem.status)}
+                      </span>
+                    </p>
                   </div>
                 </div>
+
+                <div className="info-item">
+                  <FaUser className="info-icon" />
+                  <div className="info-content">
+                    <label>Nama Karyawan</label>
+                    <p>
+                      {selectedItem.nama_karyawan ||
+                        selectedItem.id_karyawan ||
+                        "-"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="info-item">
+                  <FaBox className="info-icon" />
+                  <div className="info-content">
+                    <label>Nama Barang</label>
+                    <p>
+                      {selectedItem.nama_barang ||
+                        selectedItem.id_inventaris ||
+                        "-"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="info-item">
+                  <FaCalendarAlt className="info-icon" />
+                  <div className="info-content">
+                    <label>Tanggal Peminjaman</label>
+                    <p>{formatDate(selectedItem.tanggal_peminjaman)}</p>
+                  </div>
+                </div>
+
+                <div className="info-item">
+                  <FaCalendarAlt className="info-icon" />
+                  <div className="info-content">
+                    <label>Tanggal Pengembalian</label>
+                    <p>{formatDate(selectedItem.tanggal_pengembalian)}</p>
+                  </div>
+                </div>
+
+                {selectedItem.keterangan && (
+                  <div className="info-item full-width">
+                    <FaStickyNote className="info-icon" />
+                    <div className="info-content">
+                      <label>Keterangan</label>
+                      <p className="keterangan">
+                        {selectedItem.keterangan ||
+                          selectedItem.notes ||
+                          "-"}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    </div>,
+    document.body
+  )}
     </div>
   );
 }
